@@ -1,7 +1,3 @@
-# lecture5.py
-
-
-# common import
 import sys
 sys.path.append('..')
 from common.core import BaseWidget, run, lookup
@@ -11,11 +7,12 @@ from common.leap import getLeapInfo, getLeapFrame
 from common.kivyparticle import ParticleSystem
 
 from kivy.core.window import Window
+from kivy.core.image import Image 
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.graphics.instructions import InstructionGroup
 
-from kivy.core.image import Image 
+
 
 import numpy as np
 
@@ -75,16 +72,12 @@ class NoteSequencer(object):
 
 
 
-# for use with scale_point
-# Leap Controller is very similar to Kinect. Define a smaller range for the hands bounding box
 kLeapRange = ( (-250, 250), (50, 600), (-200, 250) )
 
-# set up size / location of 3DCursor object
 kMargin = Window.width * 0.05
 kCursorAreaSize = Window.width - 2 * kMargin, Window.height - 2 * kMargin
 kCursorAreaPos = kMargin, kMargin
 
-#eventually make a class that shows finger position in the corner instead of on-screen
 
 
 
@@ -101,7 +94,7 @@ class FingerWidget5(BaseWidget) :
 
         with self.canvas:
             #set background image 
-            self.bg = Rectangle(source='maxresdefault.jpg', pos=self.pos, size=self.size)
+            self.bg = Rectangle(source='images/maxresdefault.jpg', pos=self.pos, size=self.size)
 
         self.bind(pos=self.update_bg)
         self.bind(size=self.update_bg)
@@ -159,36 +152,10 @@ class FingerWidget5(BaseWidget) :
         for i, pt in enumerate(norm_pts):
             self.finger_disp[i].set_pos(pt)
 
-        # text = str(getLeapInfo()) + '\n' + 'hello'
-        # self.canvas.add(text)
-        #self.objects.on_update()
+       
 
         self.audio.on_update()
 
-        # threshold = .2
-
-        # print("norm pts", norm_pts)
-
-        # if norm_pts[2][0] > threshold:
-        #     #print("active")
-        #     self.active_status = True
-        #     #self.hand_disp.set_color((0,0,1))
-            
-        # else:
-        #     self.active_status = False
-        #     #self.hand_disp.set_color((1,0,0))
-
-
-        # thumb_index = sum((norm_pts[0]-norm_pts[1])**2)
-        # #for detecting flexion exercise
-        # if thumb_index < .05 and self.active_status:
-        #     self.rockets[0].flame_on()
-        #     self.notes.noteon(1)
-        #     self.active_status = False
-
-        
-        #print(norm_pt[2])
-      
 
        
 
@@ -202,22 +169,10 @@ class FingerWidget5(BaseWidget) :
             #make rocket shoot
             #pass
             print("keypress")
-            # #self.rockets[gesture_proxy].color = 
-            # self.rockets[gesture_proxy].shoot_laser()
+
             self.rockets[gesture_proxy-1].flame_on()
             self.notes.noteon(keycode[1])
 
-            # if gesture_proxy-1 == 0:
-            #     print("first rocket")
-
-            #maybe add to either the rocket class or a separate flame class
-            # self.ps = ParticleSystem('particle_flame/particle.pex')
-            # self.ps.emitter_x = pos[0]-50
-            # self.ps.emitter_y = pos[1]
-            # self.add_widget(self.ps)
-            # self.ps.start()
-            # flame = Flame(pos)
-            # self.objects.add(flame)
 
             
 
@@ -238,23 +193,20 @@ class FingerWidget5(BaseWidget) :
 
 
 class Rocket(InstructionGroup):
-    #will be lined up on side of screen, shoot asteroids (aka notes)
     def __init__(self, pos, size, color, add_funct): 
         super(Rocket, self).__init__()
 
         self.size = size
         self.pos = pos
-        self.shape = CRectangle(csize=self.size,  color = Color(hsv = color), cpos=pos, segments = 4, source='rocketship.png')
-        
-        # self.pos = np.array(pos, dtype=np.float)
-        #self.vel = np.array((randint(-300, 300), 0), dtype=np.float)
+        self.shape = CRectangle(csize=self.size,  color = Color(hsv = color), cpos=pos, segments = 4, source='images/rocketship.png')
+       
 
        
         self.add(self.shape)
         self.time = 0
         self.laser = None
 
-        self.flame = ParticleSystem('particle_flame/particle.pex')
+        self.flame = ParticleSystem('images/particle_flame/particle.pex')
         self.flame.emitter_x = self.pos[0]-50
         self.flame.emitter_y = self.pos[1]
         add_funct(self.flame)
@@ -269,70 +221,8 @@ class Rocket(InstructionGroup):
         self.flame.stop()
 
 
-    # def shoot_laser(self): #will be called in on_update of widget when gesture is detected
-    #     #make laser elems
-    #     laser = Laser(self.pos)
-    #     self.laser = laser
-    #     self.add(laser)
+ 
 
-    # def on_update(self, dt):
-    #     if self.laser:
-    #         self.laser.on_update(dt)
-
-
-    
-
-        # self.on_update(0)
-
-    # def on_update(self, dt):
-    #     # integrate accel to get vel
-    #     self.vel += gravity * dt
-
-    #     # integrate vel to get pos
-    #     self.pos += self.vel * dt
-
-    #     #update time
-    #     self.time += dt
-
-    #     # TODO: collide with sides and fall off screen after a certain number of bounces
-    #     # TODO: call callback when bounce happens.
-
-    #     # collision with floor
-    #     if self.pos[1] - self.radius < 0:
-    #         self.vel[1] = -self.vel[1] * damping
-    #         self.pos[1] = self.radius
-
-    #     self.circle.cpos = self.pos
-
-    #     rad = self.radius_anim.eval(self.time)
-
-    #     alpha = self.fade_anim.eval(self.time)
-        
-    #     self.circle.csize = (2*rad,2*rad)
-    #     self.color.a = alpha
-    #     #print(alpha)
-
-    #     return self.fade_anim.is_active(self.time)
-
-
-# class Flame(InstructionGroup):
-#      #small red circles shot at note asteroids
-#     def __init__(self, pos): 
-#         super(Flame, self).__init__()
-#         self.pos = pos
-#         self.pos[0]
-
-#         self.ps = ParticleSystem('particle_flame/particle.pex')
-#         self.ps.emitter_x = self.pos[0]
-#         self.ps.emitter_y = self.pos[1]
-#         self.add_widget(self.ps)
-
-#         self.on_update(0)
-
-#         self.turn_off = False
-
-#     def stop(self):
-#         self.turn_off = True
 
 
 class NoteRoads(InstructionGroup):
@@ -341,7 +231,7 @@ class NoteRoads(InstructionGroup):
         super(NoteRoads, self).__init__()
         self.pos = pos
         self.radius = 10 #small dots
-        #self.color = Color(.5,.5,.5) #red
+        
 
         self.shape = CRectangle(cpos = self.pos, csize = (self.radius, 3*self.radius))
 
