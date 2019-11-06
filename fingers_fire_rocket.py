@@ -1,5 +1,3 @@
-import sys
-sys.path.append('..')
 from common.core import BaseWidget, run, lookup
 from common.gfxutil import topleft_label, Cursor3D, AnimGroup, KFAnim, scale_point, CEllipse, CRectangle
 from common.kinect import Kinect
@@ -21,6 +19,8 @@ from common.synth import Synth
 from common.note import NoteGenerator, Envelope
 from common.wavegen import WaveGenerator, SpeedModulator
 from common.wavesrc import WaveBuffer, WaveFile, make_wave_buffers
+
+from gesture import GestureWidget
 
 FRAME_RATE = 44100
 SF_PATH = '../unit5/data/FluidR3_GM.sf2'
@@ -71,16 +71,6 @@ class NoteSequencer(object):
         del self.map[keycode]
 
 
-
-kLeapRange = ( (-250, 250), (50, 600), (-200, 250) )
-
-kMargin = Window.width * 0.05
-kCursorAreaSize = Window.width - 2 * kMargin, Window.height - 2 * kMargin
-kCursorAreaPos = kMargin, kMargin
-
-
-
-
 class FingerWidget5(BaseWidget) :
     def __init__(self):
         super(FingerWidget5, self).__init__()
@@ -89,8 +79,6 @@ class FingerWidget5(BaseWidget) :
 
         self.label = topleft_label()
         self.add_widget(self.label)
-
-        leap_frame = getLeapFrame()
 
         with self.canvas:
             #set background image 
@@ -106,9 +94,6 @@ class FingerWidget5(BaseWidget) :
         self.audio.set_generator(self.synth)
 
         self.notes = NoteSequencer(self.synth, [69, 72, 76, 81, [83, 68], 76, 72, 83, [84, 67], 76, 72, 84, [78, 66], 74, 69, 74, [76, 65], 72, 69, 72, [76, 65], 72, 69, [71, 50], [72, 45], [72, 45]])
-
-
-
         
         self.objects = AnimGroup()
 
@@ -127,39 +112,34 @@ class FingerWidget5(BaseWidget) :
             self.rockets.append(rocket) #index corresponds to finger gesture
             self.objects.add(rocket)
 
-       
-        self.finger_disp = []
-        for x in range(5):
-            disp = Cursor3D(kCursorAreaSize, kCursorAreaPos, ((x+2)/5, 1, (x+2)/5), size_range=(5, 20))
-           
-            self.canvas.add(disp)
-            self.finger_disp.append(disp)
-
-
-
-
-       
         self.canvas.add(self.objects)
 
+        kMargin = Window.width * 0.005
+        kCursorAreaSize = Window.width / 4 - 2 * kMargin, Window.height/4 - 2 * kMargin
+        kCursorAreaPos = Window.width - kCursorAreaSize[0] - kMargin, kMargin
+        self.gesture = GestureWidget(cursor_area_pos=kCursorAreaPos, cursor_area_size=kCursorAreaSize, size_range=(1,5))
+        self.canvas.add(self.gesture)
+
+        self.touching = False
+        self.TOUCH = 10
 
 
     def on_update(self) :
-        leap_frame = getLeapFrame()
-
-        pts = leap_frame.hands[0].fingers
-        norm_pts = [scale_point(pt, kLeapRange) for pt in pts]
-
-        for i, pt in enumerate(norm_pts):
-            self.finger_disp[i].set_pos(pt)
-
-       
 
         self.audio.on_update()
+        self.gesture.on_update()
+        self.gesture.check_touch()
 
+        touch = self.gesture.get_any_touch_state()
+        if touch:
+            if not self.touching:
+                self.notes.noteon(self.TOUCH)
+                self.touching = True
+        else:
+            if self.touching:
+                self.notes.noteoff(self.TOUCH)
+                self.touching = False
 
-       
-
-        
 
     #proxy while we work on gesture detection
     def on_key_down(self, keycode, modifiers):

@@ -23,13 +23,14 @@ class GestureWidget(InstructionGroup) :
     # constants
     NUM_FINGERS = 5
 
-    def __init__(self, leap_range=None, cursor_area_pos=None, cursor_area_size=None):
+    def __init__(self, leap_range=None, cursor_area_pos=None, cursor_area_size=None, size_range=None):
         super(GestureWidget, self).__init__()
 
         # leap size/bounding box setup
         self.leap_range = leap_range or self.kLeapRange
         cursor_area_pos = cursor_area_pos or self.kCursorAreaPos
         cursor_area_size = cursor_area_size or self.kCursorAreaSize
+        size_range = size_range or (5, 20)
 
         # past positions
         self.POSITION_HISTORY = 10
@@ -41,18 +42,18 @@ class GestureWidget(InstructionGroup) :
 
         # set up cursors for fingertips
         self.finger_cursors = []
-        self.finger_cursors.append(Cursor3D(cursor_area_size, cursor_area_pos, (.2, .2, .6), size_range=(5, 20)))
+        self.finger_cursors.append(Cursor3D(cursor_area_size, cursor_area_pos, (.2, .2, .6), size_range=size_range))
         for i in range(1, self.NUM_FINGERS):
-            self.finger_cursors.append(Cursor3D(cursor_area_size, cursor_area_pos, (.2, .6, .2), size_range=(5, 20)))
+            self.finger_cursors.append(Cursor3D(cursor_area_size, cursor_area_pos, (.2, .6, .2), size_range=size_range))
 
         self.finger_cursors_1 = []
-        self.finger_cursors_1.append(Cursor3D(cursor_area_size, cursor_area_pos, (.1, .1, .3), size_range=(5, 20)))
+        self.finger_cursors_1.append(Cursor3D(cursor_area_size, cursor_area_pos, (.1, .1, .3), size_range=size_range))
         for i in range(1, self.NUM_FINGERS):
-            self.finger_cursors_1.append(Cursor3D(cursor_area_size, cursor_area_pos, (.1, .3, .1), size_range=(5, 20)))
+            self.finger_cursors_1.append(Cursor3D(cursor_area_size, cursor_area_pos, (.1, .3, .1), size_range=size_range))
 
         # cursor for palm
-        self.palm_cursor = Cursor3D(cursor_area_size, cursor_area_pos, (1, 1, 1), size_range=(5, 20))
-        self.palm_cursor_1 = Cursor3D(cursor_area_size, cursor_area_pos, (.5, .5, .5), size_range=(5, 20))
+        self.palm_cursor = Cursor3D(cursor_area_size, cursor_area_pos, (1, 1, 1), size_range=size_range)
+        self.palm_cursor_1 = Cursor3D(cursor_area_size, cursor_area_pos, (.5, .5, .5), size_range=size_range)
 
         # lines between palm and fingertips
         self.finger_lines = []
@@ -145,6 +146,10 @@ class GestureWidget(InstructionGroup) :
     def get_touch_state(self, finger):
         # return whether a finger is touched or not
         return self.touch_states[finger]
+
+    def get_any_touch_state(self):
+        # return whether any fingers are currently touched
+        return any(self.touch_states)
 
     def update_graphics(self, palm_pt_norm, finger_pts_norm):
         # set palm and fingertip positions
