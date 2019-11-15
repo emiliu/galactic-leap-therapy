@@ -7,7 +7,7 @@ from common.wavegen import WaveGenerator, SpeedModulator
 from common.wavesrc import WaveBuffer, WaveFile, make_wave_buffers
 
 FRAME_RATE = 44100
-SF_PATH = '../unit5/data/FluidR3_GM.sf2'
+SF_PATH = './data/FluidR3_GM.sf2'
 
 class NoteCluster(object):
     def __init__(self, synth, channel, notes):
