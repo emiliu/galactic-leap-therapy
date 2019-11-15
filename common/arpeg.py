@@ -12,7 +12,7 @@ from .clock import kTicksPerQuarter, quantize_tick_up
 
 
 class Arpeggiator(object):
-    def __init__(self, sched, synth, channel=0, program=(0, 40), callback = None):
+    def __init__(self, sched, synth, channel=0, program=(0, 40), callback=None):
         super(Arpeggiator, self).__init__()
         # output parameters
         self.sched = sched
@@ -25,7 +25,7 @@ class Arpeggiator(object):
         self.length = kTicksPerQuarter / 4
         self.articulation = 0.75
         self.pitches = [60, 64, 67, 72]
-        self.direction = 'up'
+        self.direction = "up"
 
         # run-time variables
         self.cur_idx = 0
@@ -41,7 +41,7 @@ class Arpeggiator(object):
             self.synth.program(self.channel, self.program[0], self.program[1])
             now = self.sched.get_tick()
             next_tick = quantize_tick_up(now, self.length)
-            self.on_cmd  = self.sched.post_at_tick(self._noteon, next_tick, None)
+            self.on_cmd = self.sched.post_at_tick(self._noteon, next_tick, None)
 
     def stop(self):
         if self.playing:
@@ -68,11 +68,11 @@ class Arpeggiator(object):
 
     # dir is either 'up', 'down', or 'updown'
     def set_direction(self, direction):
-        assert (direction == 'up' or direction == 'down' or direction == 'updown')
+        assert direction == "up" or direction == "down" or direction == "updown"
         self.direction = direction
-        if direction == 'up':
+        if direction == "up":
             self.idx_inc = 1
-        elif direction == 'down':
+        elif direction == "down":
             self.idx_inc = -1
 
     # find the pitch we should play based on the notes, the current note index
@@ -83,10 +83,10 @@ class Arpeggiator(object):
         notes_len = len(self.pitches)
 
         # flip detection if 'updown' and at endpoint
-        if self.direction == 'updown':
+        if self.direction == "updown":
             if self.cur_idx == 0:
                 self.idx_inc = 1
-            elif self.cur_idx == notes_len-1:
+            elif self.cur_idx == notes_len - 1:
                 self.idx_inc = -1
 
         # advance index
@@ -115,7 +115,7 @@ class Arpeggiator(object):
 
         # post next note. quantize tick to line up with grid of current note length
         next_tick = quantize_tick_up(tick, self.length)
-        self.on_cmd  = self.sched.post_at_tick(self._noteon, next_tick, None)
+        self.on_cmd = self.sched.post_at_tick(self._noteon, next_tick, None)
 
     def _noteoff(self, tick, pitch):
         self.synth.noteoff(self.channel, pitch)

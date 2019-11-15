@@ -10,6 +10,7 @@
 
 
 import os
+
 os.environ["KIVY_NO_ARGS"] = "1"
 import kivy
 from kivy.app import App
@@ -33,7 +34,7 @@ class BaseWidget(Widget):
     def __init__(self, **kwargs):
         super(BaseWidget, self).__init__(**kwargs)
 
-        if hasattr(self.__class__, 'on_init'):
+        if hasattr(self.__class__, "on_init"):
             Clock.schedule_once(self._init, 0)
 
         # keyboard up / down messages
@@ -43,31 +44,31 @@ class BaseWidget(Widget):
         kb.bind(on_key_up=self._key_up)
 
         # get called when app is about to shut down
-        if hasattr(self.__class__, 'on_close'):
+        if hasattr(self.__class__, "on_close"):
             Window.bind(on_close=self._close)
 
         # create a clock to poll us every frame
-        if hasattr(self.__class__, 'on_update'):
+        if hasattr(self.__class__, "on_update"):
             Clock.schedule_interval(self._update, 0)
 
         # window resizing variables
         self.window_size = (0, 0)
-        
-    def get_mouse_pos(self) :
+
+    def get_mouse_pos(self):
         return Window.mouse_pos
 
     def _key_down(self, keyboard, keycode, text, modifiers):
         if not keycode[1] in self.down_keys:
             self.down_keys.append(keycode[1])
 
-            if hasattr(self.__class__, 'on_key_down'):
+            if hasattr(self.__class__, "on_key_down"):
                 self.on_key_down(keycode, modifiers)
 
     def _key_up(self, keyboard, keycode):
         if keycode[1] in self.down_keys:
             self.down_keys.remove(keycode[1])
 
-            if hasattr(self.__class__, 'on_key_up'):
+            if hasattr(self.__class__, "on_key_up"):
                 self.on_key_up(keycode)
 
     def _close(self, *args):
@@ -80,7 +81,7 @@ class BaseWidget(Widget):
         if Window.size != self.window_size:
             self.window_size = Window.size
 
-            if hasattr(self.__class__, 'on_layout'):
+            if hasattr(self.__class__, "on_layout"):
                 self.on_layout(self.window_size)
 
 
@@ -88,9 +89,12 @@ class BaseWidget(Widget):
 # app's lifetime, you can register the function by calling register_terminate_func.
 # it will get called at the end, even if the app crashed.
 g_terminate_funcs = []
-def register_terminate_func(f) :
+
+
+def register_terminate_func(f):
     global g_terminate_funcs
     g_terminate_funcs.append(f)
+
 
 def run(widget, fullscreen=False):
     """Pass in a widget, and this will automatically run it. Will also
@@ -99,7 +103,7 @@ def run(widget, fullscreen=False):
     """
 
     if fullscreen:
-        Window.fullscreen = 'auto'
+        Window.fullscreen = "auto"
 
     class MainApp(App):
         def build(self):
@@ -117,7 +121,7 @@ def run(widget, fullscreen=False):
 
 # returns the nth item in values where n is the index of k in keys.
 # ex: lookup('s', 'asdf', (4,5,6,7)) will return 5.
-def lookup(k, keys, values) :
+def lookup(k, keys, values):
     if k in keys:
         idx = keys.index(k)
         return values[idx]

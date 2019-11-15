@@ -1,4 +1,3 @@
-
 #####################################################################
 #
 # metro.py
@@ -11,10 +10,12 @@
 
 from .clock import kTicksPerQuarter, quantize_tick_up
 
+
 class Metronome(object):
     """Plays a steady click every beat.
     """
-    def __init__(self, sched, synth, channel = 0, program=(128, 0)):
+
+    def __init__(self, sched, synth, channel=0, program=(128, 0)):
         super(Metronome, self).__init__()
         self.sched = sched
         self.synth = synth
@@ -43,8 +44,8 @@ class Metronome(object):
 
     def stop(self):
         if not self.playing:
-            return 
-            
+            return
+
         self.playing = False
 
         # cancel anything pending in the future.

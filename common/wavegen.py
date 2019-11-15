@@ -44,7 +44,7 @@ class WaveGenerator(object):
     def get_gain(self):
         return self.gain
 
-    def generate(self, num_frames, num_channels) :
+    def generate(self, num_frames, num_channels):
         if self.paused:
             output = np.zeros(num_frames * num_channels)
             return (output, True)
@@ -80,17 +80,16 @@ class WaveGenerator(object):
             return (output * self.gain, continue_flag)
 
 
-
 class SpeedModulator(object):
-    def __init__(self, generator, speed = 1.0):
+    def __init__(self, generator, speed=1.0):
         super(SpeedModulator, self).__init__()
         self.generator = generator
         self.speed = speed
 
-    def set_speed(self, speed) :
+    def set_speed(self, speed):
         self.speed = speed
 
-    def generate(self, num_frames, num_channels) :
+    def generate(self, num_frames, num_channels):
         # optimization if speed is 1.0
         if self.speed == 1.0:
             return self.generator.generate(num_frames, num_channels)
@@ -103,16 +102,18 @@ class SpeedModulator(object):
         data, continue_flag = self.generator.generate(adj_frames, num_channels)
 
         # split into multi-channels:
-        data_chans = [ data[n::num_channels] for n in range(num_channels) ]
+        data_chans = [data[n::num_channels] for n in range(num_channels)]
 
         # stretch or squash data to fit exactly into num_frames
         from_range = np.arange(adj_frames)
         to_range = np.arange(num_frames) * (float(adj_frames) / num_frames)
-        resampled = [ np.interp(to_range, from_range, data_chans[n]) for n in range(num_channels) ]
+        resampled = [
+            np.interp(to_range, from_range, data_chans[n]) for n in range(num_channels)
+        ]
 
         # convert back by interleaving into a single buffer
         output = np.empty(num_channels * num_frames, dtype=np.float32)
-        for n in range(num_channels) :
+        for n in range(num_channels):
             output[n::num_channels] = resampled[n]
 
         return (output, continue_flag)

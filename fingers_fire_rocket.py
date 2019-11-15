@@ -1,15 +1,22 @@
 from common.core import BaseWidget, run, lookup
-from common.gfxutil import topleft_label, Cursor3D, AnimGroup, KFAnim, scale_point, CEllipse, CRectangle
+from common.gfxutil import (
+    topleft_label,
+    Cursor3D,
+    AnimGroup,
+    KFAnim,
+    scale_point,
+    CEllipse,
+    CRectangle,
+)
 from common.kinect import Kinect
 from common.leap import getLeapInfo, getLeapFrame
 from common.kivyparticle import ParticleSystem
 
 from kivy.core.window import Window
-from kivy.core.image import Image 
+from kivy.core.image import Image
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.graphics.instructions import InstructionGroup
-
 
 
 import numpy as np
@@ -23,7 +30,8 @@ from common.wavesrc import WaveBuffer, WaveFile, make_wave_buffers
 from gesture import GestureWidget
 
 FRAME_RATE = 44100
-SF_PATH = './data/FluidR3_GM.sf2'
+SF_PATH = "./data/FluidR3_GM.sf2"
+
 
 class NoteCluster(object):
     def __init__(self, synth, channel, notes):
@@ -38,10 +46,10 @@ class NoteCluster(object):
         for note in self.notes:
             vel = 80
             self.synth.noteon(self.channel, note, vel)
+
     def noteoff(self):
         for note in self.notes:
             self.synth.noteoff(self.channel, note)
-
 
 
 class NoteSequencer(object):
@@ -66,65 +74,105 @@ class NoteSequencer(object):
         self.index += 1
 
     def noteoff(self, keycode):
-        if self.stopped: return
+        if self.stopped:
+            return
         self.map[keycode].noteoff()
         del self.map[keycode]
 
 
-class FingerWidget5(BaseWidget) :
+class FingerWidget5(BaseWidget):
     def __init__(self):
         super(FingerWidget5, self).__init__()
 
-        print('hello widget 5')
+        print("hello widget 5")
 
         self.label = topleft_label()
         self.add_widget(self.label)
 
         with self.canvas:
-            #set background image 
-            self.bg = Rectangle(source='images/maxresdefault.jpg', pos=self.pos, size=self.size)
+            # set background image
+            self.bg = Rectangle(
+                source="images/maxresdefault.jpg", pos=self.pos, size=self.size
+            )
 
         self.bind(pos=self.update_bg)
         self.bind(size=self.update_bg)
-        #bind background to size of window
-
+        # bind background to size of window
 
         self.audio = Audio(2)
         self.synth = Synth(SF_PATH)
         self.audio.set_generator(self.synth)
 
-        self.notes = NoteSequencer(self.synth, [69, 72, 76, 81, [83, 68], 76, 72, 83, [84, 67], 76, 72, 84, [78, 66], 74, 69, 74, [76, 65], 72, 69, 72, [76, 65], 72, 69, [71, 50], [72, 45], [72, 45]])
-        
+        self.notes = NoteSequencer(
+            self.synth,
+            [
+                69,
+                72,
+                76,
+                81,
+                [83, 68],
+                76,
+                72,
+                83,
+                [84, 67],
+                76,
+                72,
+                84,
+                [78, 66],
+                74,
+                69,
+                74,
+                [76, 65],
+                72,
+                69,
+                72,
+                [76, 65],
+                72,
+                69,
+                [71, 50],
+                [72, 45],
+                [72, 45],
+            ],
+        )
+
         self.objects = AnimGroup()
 
-        #add rockets to screen
+        # add rockets to screen
         self.rockets = []
         num_inter = 4
         for i in range(num_inter):
-            x = 200 #near left edge of screen
-            y = np.interp((i), (0, num_inter), (200, int(Window.height*.8)))
+            x = 200  # near left edge of screen
+            y = np.interp((i), (0, num_inter), (200, int(Window.height * 0.8)))
 
-            hue = np.interp((i), (0, num_inter), (0,255))
-            color = (hue, .5, .5)
+            hue = np.interp((i), (0, num_inter), (0, 255))
+            color = (hue, 0.5, 0.5)
             pos = (x, y)
 
-            rocket = Rocket(pos, (200, 100), color, self.add_widget) #add_widget is the callback
-            self.rockets.append(rocket) #index corresponds to finger gesture
+            rocket = Rocket(
+                pos, (200, 100), color, self.add_widget
+            )  # add_widget is the callback
+            self.rockets.append(rocket)  # index corresponds to finger gesture
             self.objects.add(rocket)
 
         self.canvas.add(self.objects)
 
         kMargin = Window.width * 0.005
-        kCursorAreaSize = Window.width / 4 - 2 * kMargin, Window.height/4 - 2 * kMargin
+        kCursorAreaSize = (
+            Window.width / 4 - 2 * kMargin,
+            Window.height / 4 - 2 * kMargin,
+        )
         kCursorAreaPos = Window.width - kCursorAreaSize[0] - kMargin, kMargin
-        self.gesture = GestureWidget(cursor_area_pos=kCursorAreaPos, cursor_area_size=kCursorAreaSize, size_range=(1,5))
+        self.gesture = GestureWidget(
+            cursor_area_pos=kCursorAreaPos,
+            cursor_area_size=kCursorAreaSize,
+            size_range=(1, 5),
+        )
         self.canvas.add(self.gesture)
 
         self.touching = False
         self.TOUCH = 10
 
-
-    def on_update(self) :
+    def on_update(self):
 
         self.audio.on_update()
         self.gesture.on_update()
@@ -140,32 +188,25 @@ class FingerWidget5(BaseWidget) :
                 self.notes.noteoff(self.TOUCH)
                 self.touching = False
 
-
-    #proxy while we work on gesture detection
+    # proxy while we work on gesture detection
     def on_key_down(self, keycode, modifiers):
 
-        gesture_proxy = lookup(keycode[1], 'qwer', (1, 2, 3, 4))
+        gesture_proxy = lookup(keycode[1], "qwer", (1, 2, 3, 4))
         if gesture_proxy:
-            #make rocket shoot
-            #pass
+            # make rocket shoot
+            # pass
             print("keypress")
 
-            self.rockets[gesture_proxy-1].flame_on()
+            self.rockets[gesture_proxy - 1].flame_on()
             self.notes.noteon(keycode[1])
-
-
-            
 
     def on_key_up(self, keycode):
 
-        gesture_proxy = lookup(keycode[1], 'qwer', (1, 2, 3, 4))
+        gesture_proxy = lookup(keycode[1], "qwer", (1, 2, 3, 4))
         if gesture_proxy:
-            #stop rocket shooting
-            self.rockets[gesture_proxy-1].flame_off()
+            # stop rocket shooting
+            self.rockets[gesture_proxy - 1].flame_off()
             self.notes.noteoff(keycode[1])
-
-
-
 
     def update_bg(self, *args):
         self.bg.pos = self.pos
@@ -173,26 +214,29 @@ class FingerWidget5(BaseWidget) :
 
 
 class Rocket(InstructionGroup):
-    def __init__(self, pos, size, color, add_funct): 
+    def __init__(self, pos, size, color, add_funct):
         super(Rocket, self).__init__()
 
         self.size = size
         self.pos = pos
-        self.shape = CRectangle(csize=self.size,  color = Color(hsv = color), cpos=pos, segments = 4, source='images/rocketship.png')
-       
+        self.shape = CRectangle(
+            csize=self.size,
+            color=Color(hsv=color),
+            cpos=pos,
+            segments=4,
+            source="images/rocketship.png",
+        )
 
-       
         self.add(self.shape)
         self.time = 0
         self.laser = None
 
-        self.flame = ParticleSystem('images/particle_flame/particle.pex')
-        self.flame.emitter_x = self.pos[0]-50
+        self.flame = ParticleSystem("images/particle_flame/particle.pex")
+        self.flame.emitter_x = self.pos[0] - 50
         self.flame.emitter_y = self.pos[1]
         add_funct(self.flame)
 
-
-        # self.flame = 
+        # self.flame =
 
     def flame_on(self):
         self.flame.start()
@@ -201,78 +245,60 @@ class Rocket(InstructionGroup):
         self.flame.stop()
 
 
- 
-
-
-
 class NoteRoads(InstructionGroup):
-     #notes represented as balls
-    def __init__(self, pos): 
+    # notes represented as balls
+    def __init__(self, pos):
         super(NoteRoads, self).__init__()
         self.pos = pos
-        self.radius = 10 #small dots
-        
+        self.radius = 10  # small dots
 
-        self.shape = CRectangle(cpos = self.pos, csize = (self.radius, 3*self.radius))
+        self.shape = CRectangle(cpos=self.pos, csize=(self.radius, 3 * self.radius))
 
         self.time = 0
         self.vel = 100
 
         self.add(self.shape)
-
 
         self.on_update(0)
 
 
-
-
 class Laser(InstructionGroup):
-     #small red circles shot at note asteroids
-    def __init__(self, pos): 
+    # small red circles shot at note asteroids
+    def __init__(self, pos):
         super(Laser, self).__init__()
         self.pos = pos
-        self.radius = 10 #small dots
-        #self.color = Color(.5,.5,.5) #red
+        self.radius = 10  # small dots
+        # self.color = Color(.5,.5,.5) #red
 
-        self.shape = CEllipse(cpos = self.pos, csize = (self.radius, self.radius))
+        self.shape = CEllipse(cpos=self.pos, csize=(self.radius, self.radius))
 
         self.time = 0
         self.vel = 100
 
         self.add(self.shape)
-
 
         self.on_update(0)
 
     def on_update(self, dt):
 
-        #integrate vel to get pos
+        # integrate vel to get pos
         x, y = self.shape.pos
         x += self.vel * dt
 
-        self.shape.pos = (x,y)
+        self.shape.pos = (x, y)
 
-        #self.shape.pos[0] += self.vel*dt
+        # self.shape.pos[0] += self.vel*dt
 
-        #update time
+        # update time
         self.time += dt
-        #print("update")
+        # print("update")
 
-        #remove laser as it goes off screen
+        # remove laser as it goes off screen
         if self.shape.pos[0] > Window.width:
             print("off screen")
             return False
-            
 
         return True
-
-
-
-
-
-
-
-
 
 
 if __name__ == "__main__":

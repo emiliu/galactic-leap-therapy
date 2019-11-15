@@ -19,7 +19,6 @@ from . import core
 import socket
 
 
-
 # This class assumes that Synapse is running.
 # It handles communications with Synapse and presents joint data to
 # the app.
@@ -41,13 +40,13 @@ class Kinect(threading.Thread):
     kClosestHand = "/closesthand"
 
     # position coordinate system type
-    kBody  = '_pos_body'
-    kWorld = '_pos_world'
-    kScreen = '_pos_screen'
+    kBody = "_pos_body"
+    kWorld = "_pos_world"
+    kScreen = "_pos_screen"
 
-    kPosNum = { kBody: 1, kWorld: 2, kScreen: 3 }
+    kPosNum = {kBody: 1, kWorld: 2, kScreen: 3}
 
-    def __init__(self, remote_ip = None, pos_type = kBody):
+    def __init__(self, remote_ip=None, pos_type=kBody):
         super(Kinect, self).__init__()
 
         self.pos_type = pos_type
@@ -62,16 +61,18 @@ class Kinect(threading.Thread):
 
         # Synapse is running locally on this machine, using localhost
         else:
-            listen_ip = 'localhost'
+            listen_ip = "localhost"
             listen_port = 12345
 
-            send_ip = 'localhost'
+            send_ip = "localhost"
             send_port = 12346
 
         # create a dispatcher and server, which handles incoming messages from Synapse
         self.dispatcher = dispatcher.Dispatcher()
-        self.dispatcher.map( '/tracking_skeleton', self.callback_tracking_skeleton )
-        self.server = osc_server.ThreadingOSCUDPServer( (listen_ip, listen_port), self.dispatcher)
+        self.dispatcher.map("/tracking_skeleton", self.callback_tracking_skeleton)
+        self.server = osc_server.ThreadingOSCUDPServer(
+            (listen_ip, listen_port), self.dispatcher
+        )
 
         # create the client, which sends control messages to Synapse
         self.client = udp_client.SimpleUDPClient(send_ip, send_port)
@@ -95,7 +96,7 @@ class Kinect(threading.Thread):
         self.server.serve_forever()
 
     def add_joint(self, joint):
-        self.dispatcher.map( joint + self.pos_type, self.callback )        
+        self.dispatcher.map(joint + self.pos_type, self.callback)
         self.active_joints[joint] = np.array([0.0, 0.0, 0.0])
 
     def on_update(self):
@@ -110,15 +111,14 @@ class Kinect(threading.Thread):
                     msg = (j + "_trackjointpos", Kinect.kPosNum[self.pos_type])
                     self.client.send_message(*msg)
         except Exception as x:
-            print(x, 'sending to', self.client._address, self.client._port)
+            print(x, "sending to", self.client._address, self.client._port)
 
-    def get_joint(self, joint) :
+    def get_joint(self, joint):
         return np.copy(self.active_joints[joint])
 
     def callback(self, addr, x, y, z):
         joint_name = addr.replace(self.pos_type, "")
-        self.active_joints[joint_name] = np.array((x,y,z))
+        self.active_joints[joint_name] = np.array((x, y, z))
 
     def callback_tracking_skeleton(self, addr, args):
-        print('tracking_skeleton', args)
-
+        print("tracking_skeleton", args)

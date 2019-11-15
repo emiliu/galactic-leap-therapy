@@ -7,7 +7,8 @@ from common.wavegen import WaveGenerator, SpeedModulator
 from common.wavesrc import WaveBuffer, WaveFile, make_wave_buffers
 
 FRAME_RATE = 44100
-SF_PATH = './data/FluidR3_GM.sf2'
+SF_PATH = "./data/FluidR3_GM.sf2"
+
 
 class NoteCluster(object):
     def __init__(self, synth, channel, notes):
@@ -22,9 +23,11 @@ class NoteCluster(object):
         for note in self.notes:
             vel = 80
             self.synth.noteon(self.channel, note, vel)
+
     def noteoff(self):
         for note in self.notes:
             self.synth.noteoff(self.channel, note)
+
 
 class NoteSequencer(object):
     def __init__(self, synth, notes, channel=0, program=(0, 0)):
@@ -48,9 +51,11 @@ class NoteSequencer(object):
         self.index += 1
 
     def noteoff(self, keycode):
-        if self.stopped: return
+        if self.stopped:
+            return
         self.map[keycode].noteoff()
         del self.map[keycode]
+
 
 class MainWidget(BaseWidget):
     def __init__(self):
@@ -60,7 +65,37 @@ class MainWidget(BaseWidget):
         self.synth = Synth(SF_PATH)
         self.audio.set_generator(self.synth)
 
-        self.notes = NoteSequencer(self.synth, [69, 72, 76, 81, [83, 68], 76, 72, 83, [84, 67], 76, 72, 84, [78, 66], 74, 69, 74, [76, 65], 72, 69, 72, [76, 65], 72, 69, [71, 50], [72, 45], [72, 45]])
+        self.notes = NoteSequencer(
+            self.synth,
+            [
+                69,
+                72,
+                76,
+                81,
+                [83, 68],
+                76,
+                72,
+                83,
+                [84, 67],
+                76,
+                72,
+                84,
+                [78, 66],
+                74,
+                69,
+                74,
+                [76, 65],
+                72,
+                69,
+                72,
+                [76, 65],
+                72,
+                69,
+                [71, 50],
+                [72, 45],
+                [72, 45],
+            ],
+        )
 
     def on_update(self):
         self.audio.on_update()
@@ -71,5 +106,6 @@ class MainWidget(BaseWidget):
     def on_key_up(self, keycode):
         self.notes.noteoff(keycode[1])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run(MainWidget)
