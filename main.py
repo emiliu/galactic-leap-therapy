@@ -31,6 +31,8 @@ from graphics import Rocket, NoteRoads, Laser
 from sounds import NoteCluster, NoteSequencer
 
 
+SF_PATH = 'data/FluidR3_GM.sf2'
+
 class MainWidget(BaseWidget):
     def __init__(self):
         super(MainWidget, self).__init__()

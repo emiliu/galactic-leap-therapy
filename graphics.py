@@ -12,6 +12,7 @@ from kivy.graphics.instructions import InstructionGroup
 import numpy as np
 
 from common.audio import Audio
+from common.gfxutil import CRectangle
 from common.synth import Synth
 from common.note import NoteGenerator, Envelope
 from common.wavegen import WaveGenerator, SpeedModulator
