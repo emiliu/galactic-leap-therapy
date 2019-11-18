@@ -18,7 +18,6 @@ from kivy.uix.widget import Widget
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.graphics.instructions import InstructionGroup
 
-
 import numpy as np
 
 from common.audio import Audio
@@ -27,57 +26,11 @@ from common.note import NoteGenerator, Envelope
 from common.wavegen import WaveGenerator, SpeedModulator
 from common.wavesrc import WaveBuffer, WaveFile, make_wave_buffers
 
+from sounds import NoteCluster, NoteSequencer
 from gesture import GestureWidget
 
 FRAME_RATE = 44100
 SF_PATH = "./data/FluidR3_GM.sf2"
-
-
-class NoteCluster(object):
-    def __init__(self, synth, channel, notes):
-        super(NoteCluster, self).__init__()
-        if type(notes) is int:
-            notes = [notes]
-        self.notes = tuple(notes)
-        self.synth = synth
-        self.channel = channel
-
-    def noteon(self):
-        for note in self.notes:
-            vel = 80
-            self.synth.noteon(self.channel, note, vel)
-
-    def noteoff(self):
-        for note in self.notes:
-            self.synth.noteoff(self.channel, note)
-
-
-class NoteSequencer(object):
-    def __init__(self, synth, notes, channel=0, program=(0, 0)):
-        super(NoteSequencer, self).__init__()
-        self.notes = [NoteCluster(synth, channel, note) for note in notes]
-        self.synth = synth
-        self.channel = channel
-        self.program = program
-        self.synth.program(self.channel, self.program[0], self.program[1])
-
-        self.index = 0
-        self.map = dict()
-        self.stopped = False
-
-    def noteon(self, keycode):
-        if self.index >= len(self.notes):
-            self.stopped = True
-            return
-        self.notes[self.index].noteon()
-        self.map[keycode] = self.notes[self.index]
-        self.index += 1
-
-    def noteoff(self, keycode):
-        if self.stopped:
-            return
-        self.map[keycode].noteoff()
-        del self.map[keycode]
 
 
 class FingerWidget5(BaseWidget):
