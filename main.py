@@ -1,6 +1,7 @@
 from common.core import BaseWidget, run, lookup
 from common.gfxutil import (
     topleft_label,
+    resize_topleft_label,
     Cursor3D,
     AnimGroup,
     KFAnim,
@@ -38,18 +39,10 @@ class MainWidget(BaseWidget):
     def __init__(self):
         super(MainWidget, self).__init__()
 
-        self.label = topleft_label()
-        self.add_widget(self.label)
-
-        with self.canvas:
-            # set background image
-            self.bg = Rectangle(
-                source="images/maxresdefault.jpg", pos=self.pos, size=self.size
-            )
-
-        self.bind(pos=self.update_bg)
-        self.bind(size=self.update_bg)
-        # bind background to size of window
+        self.bg = Rectangle(
+            source="./images/vzmpv432havx.jpg", pos=self.pos, size=Window.size
+        )
+        self.canvas.add(self.bg)
 
         self.audio = Audio(2)
         self.synth = Synth(SF_PATH)
@@ -113,19 +106,25 @@ class MainWidget(BaseWidget):
             Window.width / 4 - 2 * kMargin,
             Window.height / 4 - 2 * kMargin,
         )
-        kCursorAreaPos = Window.width - kCursorAreaSize[0] - kMargin, kMargin
+        kCursorAreaPos = (
+            Window.width - kCursorAreaSize[0] - kMargin,
+            kMargin,
+        )
         self.gesture = GestureWidget(
             cursor_area_pos=kCursorAreaPos,
             cursor_area_size=kCursorAreaSize,
             size_range=(1, 5),
+            display_trailing_cursors=False,
         )
         self.canvas.add(self.gesture)
 
         self.touching = False
         self.TOUCH = 10
 
-    def on_update(self):
+        self.label = topleft_label()
+        self.add_widget(self.label)
 
+    def on_update(self):
         self.audio.on_update()
         self.gesture.on_update()
         self.gesture.check_touch()
@@ -140,9 +139,36 @@ class MainWidget(BaseWidget):
                 self.notes.noteoff(self.TOUCH)
                 self.touching = False
 
+        self.label.text = ""
+        self.label.text += str(getLeapInfo())
+
+    def on_layout(self, window_size):
+        # resize background
+        ASPECT = 16 / 9
+        width = min(Window.width, Window.height * ASPECT)
+        height = width / ASPECT
+        bg_size = np.array([width, height])
+        bg_pos = (np.array([Window.width, Window.height]) - bg_size) / 2
+        self.bg.pos = bg_pos
+        self.bg.size = bg_size
+
+        # resize gesture widget
+        kMargin = width * 0.005
+        kCursorAreaSize = (
+            width / 4 - 2 * kMargin,
+            height / 4 - 2 * kMargin,
+        )
+        kCursorAreaPos = (
+            bg_pos[0] + width - kCursorAreaSize[0] - kMargin,
+            bg_pos[1] + kMargin,
+        )
+        self.gesture.resize_display(kCursorAreaPos, kCursorAreaSize)
+
+        # resize label
+        resize_topleft_label(self.label)
+
     # proxy while we work on gesture detection
     def on_key_down(self, keycode, modifiers):
-
         gesture_proxy = lookup(keycode[1], "qwer", (1, 2, 3, 4))
         if gesture_proxy:
             # make rocket shoot
@@ -153,17 +179,13 @@ class MainWidget(BaseWidget):
             self.notes.noteon(keycode[1])
 
     def on_key_up(self, keycode):
-
         gesture_proxy = lookup(keycode[1], "qwer", (1, 2, 3, 4))
         if gesture_proxy:
             # stop rocket shooting
             self.rockets[gesture_proxy - 1].flame_off()
             self.notes.noteoff(keycode[1])
 
-    def update_bg(self, *args):
-        self.bg.pos = self.pos
-        self.bg.size = self.size
-
 
 if __name__ == "__main__":
     run(MainWidget)
+    # run(MainWidget, fullscreen=True)

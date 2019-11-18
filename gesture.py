@@ -37,6 +37,7 @@ class GestureWidget(InstructionGroup):
         cursor_area_pos=None,
         cursor_area_size=None,
         size_range=None,
+        display_trailing_cursors=True,
     ):
         super(GestureWidget, self).__init__()
 
@@ -56,15 +57,7 @@ class GestureWidget(InstructionGroup):
 
         # set up cursors for fingertips
         self.finger_cursors = []
-        self.finger_cursors.append(
-            Cursor3D(
-                cursor_area_size,
-                cursor_area_pos,
-                (0.2, 0.2, 0.6),
-                size_range=size_range,
-            )
-        )
-        for i in range(1, self.NUM_FINGERS):
+        for i in range(0, self.NUM_FINGERS):
             self.finger_cursors.append(
                 Cursor3D(
                     cursor_area_size,
@@ -74,32 +67,31 @@ class GestureWidget(InstructionGroup):
                 )
             )
 
-        self.finger_cursors_1 = []
-        self.finger_cursors_1.append(
-            Cursor3D(
-                cursor_area_size,
-                cursor_area_pos,
-                (0.1, 0.1, 0.3),
-                size_range=size_range,
-            )
-        )
-        for i in range(1, self.NUM_FINGERS):
-            self.finger_cursors_1.append(
-                Cursor3D(
-                    cursor_area_size,
-                    cursor_area_pos,
-                    (0.1, 0.3, 0.1),
-                    size_range=size_range,
+        self.finger_cursors_1 = None
+        if display_trailing_cursors:
+            self.finger_cursors_1 = []
+            for i in range(0, self.NUM_FINGERS):
+                self.finger_cursors_1.append(
+                    Cursor3D(
+                        cursor_area_size,
+                        cursor_area_pos,
+                        (0.1, 0.3, 0.1),
+                        size_range=size_range,
+                    )
                 )
-            )
 
         # cursor for palm
         self.palm_cursor = Cursor3D(
             cursor_area_size, cursor_area_pos, (1, 1, 1), size_range=size_range
         )
-        self.palm_cursor_1 = Cursor3D(
-            cursor_area_size, cursor_area_pos, (0.5, 0.5, 0.5), size_range=size_range
-        )
+        self.palm_cursor_1 = None
+        if display_trailing_cursors:
+            self.palm_cursor_1 = Cursor3D(
+                cursor_area_size,
+                cursor_area_pos,
+                (0.5, 0.5, 0.5),
+                size_range=size_range,
+            )
 
         # lines between palm and fingertips
         self.finger_lines = []
@@ -111,9 +103,10 @@ class GestureWidget(InstructionGroup):
         for fl in self.finger_lines:
             self.add(fl)
 
-        self.add(self.palm_cursor_1)
-        for fc in self.finger_cursors_1:
-            self.add(fc)
+        if display_trailing_cursors:
+            self.add(self.palm_cursor_1)
+            for fc in self.finger_cursors_1:
+                self.add(fc)
 
         self.add(self.palm_cursor)
         for fc in self.finger_cursors:
@@ -136,6 +129,19 @@ class GestureWidget(InstructionGroup):
             )
 
             self.update_graphics(palm_pt_norm, finger_pts_norm)
+
+    def resize_display(self, cursor_area_pos=None, cursor_area_size=None):
+        cursor_area_pos = cursor_area_pos or self.kCursorAreaPos
+        cursor_area_size = cursor_area_size or self.kCursorAreaSize
+
+        self.palm_cursor.resize(cursor_area_pos, cursor_area_size)
+        for c in self.finger_cursors:
+            c.resize(cursor_area_pos, cursor_area_size)
+
+        if self.palm_cursor_1 is not None:
+            self.palm_cursor_1.resize(cursor_area_pos, cursor_area_size)
+            for c in self.finger_cursors_1:
+                c.resize(cursor_area_pos, cursor_area_size)
 
     def check_touch(self):
         # return all fingers that have just touched in this instant,
@@ -200,13 +206,14 @@ class GestureWidget(InstructionGroup):
 
     def update_graphics(self, palm_pt_norm, finger_pts_norm):
         # set palm and fingertip positions
-        self.palm_cursor_1.set_pos(
-            self._flip_y_z(scale_point(self.palm_pts[-1], self.leap_range))
-        )
-        for i, pt in enumerate(
-            [scale_point(p, self.leap_range) for p in self.finger_pts[-1]]
-        ):
-            self.finger_cursors_1[i].set_pos(self._flip_y_z(pt))
+        if self.palm_cursor_1 is not None:
+            self.palm_cursor_1.set_pos(
+                self._flip_y_z(scale_point(self.palm_pts[-1], self.leap_range))
+            )
+            for i, pt in enumerate(
+                [scale_point(p, self.leap_range) for p in self.finger_pts[-1]]
+            ):
+                self.finger_cursors_1[i].set_pos(self._flip_y_z(pt))
 
         # set palm and fingertip positions
         self.palm_cursor.set_pos(self._flip_y_z(palm_pt_norm))

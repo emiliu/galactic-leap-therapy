@@ -196,9 +196,11 @@ class Cursor3D(InstructionGroup):
         self.min_sz = size_range[0]
         self.max_sz = size_range[1]
 
+        self.border = None
         if border:
             self.add(Color(1, 0, 0))
-            self.add(Line(rectangle=area_pos + area_size))
+            self.border = Line(rectangle=area_pos + area_size)
+            self.add(self.border)
 
         self.color = Color(*rgb)
         self.add(self.color)
@@ -222,6 +224,13 @@ class Cursor3D(InstructionGroup):
 
     def get_screen_xy(self):
         return self.cursor.cpos
+
+    def resize(self, area_pos, area_size):
+        self.area_pos = area_pos
+        self.area_size = area_size
+        if self.border:
+            self.border.rectangle = area_pos + area_size
+        self.cursor.cpos = area_pos
 
 
 # convert the point pt to a unit range point spanning 0-1 in x,y, and z
