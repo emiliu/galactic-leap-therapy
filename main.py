@@ -31,13 +31,12 @@ from graphics import Rocket, NoteRoads, Laser
 from sounds import NoteCluster, NoteSequencer
 
 
-SF_PATH = 'data/FluidR3_GM.sf2'
+SF_PATH = "data/FluidR3_GM.sf2"
+
 
 class MainWidget(BaseWidget):
     def __init__(self):
         super(MainWidget, self).__init__()
-
-        print("hello widget 5")
 
         self.label = topleft_label()
         self.add_widget(self.label)
@@ -164,7 +163,6 @@ class MainWidget(BaseWidget):
     def update_bg(self, *args):
         self.bg.pos = self.pos
         self.bg.size = self.size
-
 
 
 if __name__ == "__main__":
