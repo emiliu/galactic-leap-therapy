@@ -237,6 +237,17 @@ class GestureWidget(InstructionGroup):
         assert len(pt) == 3
         return np.array([pt[0], 1 - pt[2], 1 - pt[1]])
 
+    def get_relative_wrist_position(self, axis):
+        #0 axis is x/-z, 1 axis is y/-z
+        #middle finger to palm vectors
+        vector_pm = self.finger_pts[0, 2]-self.palm_pts[0]
+        dist = np.arctan(vector_pm[axis]/-vector_pm[2])
+
+        return dist
+
+        
+
+
 
 class MainWidget(BaseWidget):
     def __init__(self):
@@ -253,6 +264,11 @@ class MainWidget(BaseWidget):
         touch_fingers = self.gesture.check_touch()
         if touch_fingers:
             print(touch_fingers)
+
+        wrist_pos = self.gesture.get_relative_wrist_position(0)
+        if np.abs(wrist_pos) > 1:
+            print(wrist_pos)
+
 
 
 if __name__ == "__main__":
