@@ -30,7 +30,7 @@ class Rocket(InstructionGroup):
             color=Color(hsv=color),
             cpos=pos,
             segments=4,
-            source="images/rocketship.png",
+            source="images/ufo2.png",
         )
 
         self.add(self.shape)
@@ -103,6 +103,41 @@ class Laser(InstructionGroup):
             return False
 
         return True
+
+
+class FlexShip(InstructionGroup):
+    def __init__(self, pos):
+        super(FlexShip, self).__init__()
+
+        self.size = (80,80)
+        self.pos = pos
+        self.shape = CRectangle(
+            csize=self.size,
+            cpos=pos,
+            segments=4,
+            source="images/redship.png",
+        )
+
+        self.add(self.shape)
+
+        self.flame = ParticleSystem("images/particle_flame/particle.pex")
+        self.flame.emitter_x = self.pos[0] - 50
+        self.flame.emitter_y = self.pos[1]
+        self.flame.start()
+
+    def move_display(self, inc, axis):
+        #move rocket increment along axis (x=0, y=1)
+        if axis == 0:
+            pos = (self.shape.pos[axis]+inc, self.shape.pos[1])
+        else:
+            pos = (self.shape.pos[0], self.shape.pos[axis]+inc)
+
+        if pos[0] > 0 and pos[0] < Window.width-100:
+            if pos[1] > 0 and pos[1] < Window.height:
+        
+                self.shape.pos = pos
+
+
 
 
 class MainWidget(BaseWidget):

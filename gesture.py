@@ -245,6 +245,16 @@ class GestureWidget(InstructionGroup):
 
         return dist
 
+    def get_directionality(self, axis, thresh):
+        #
+        dist = self.get_relative_wrist_position(axis)
+
+        if np.abs(dist) > .5:
+            return dist*10
+        return 0
+
+        
+
         
 
 
