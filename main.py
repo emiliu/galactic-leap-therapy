@@ -1,191 +1,77 @@
-from common.core import BaseWidget, run, lookup
-from common.gfxutil import (
-    topleft_label,
-    resize_topleft_label,
-    Cursor3D,
-    AnimGroup,
-    KFAnim,
-    scale_point,
-    CEllipse,
-    CRectangle,
-)
-from common.kinect import Kinect
-from common.leap import getLeapInfo, getLeapFrame
-from common.kivyparticle import ParticleSystem
-
-from kivy.core.window import Window
-from kivy.core.image import Image
-from kivy.uix.widget import Widget
-from kivy.graphics import Color, Ellipse, Line, Rectangle
-from kivy.graphics.instructions import InstructionGroup
-
-import numpy as np
-
-from common.audio import Audio
-from common.synth import Synth
-from common.note import NoteGenerator, Envelope
-from common.wavegen import WaveGenerator, SpeedModulator
-from common.wavesrc import WaveBuffer, WaveFile, make_wave_buffers
-
-from gesture import GestureWidget
-from graphics import Rocket, NoteRoads, Laser
-from sounds import NoteCluster, NoteSequencer
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.lang import Builder
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.dropdown import DropDown
+from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
+from kivy.uix.togglebutton import ToggleButton
+from opposition import MainWidget as OppWidget
+#import sys
+#sys.path.append('..')
+#from unit3.class3.pset3 import MainWidget3 as OppWidget
+#from pset7 import MainWidget as OppWidget
+#from common.core import g_terminate_funcs
 
 
-SF_PATH = "data/FluidR3_GM.sf2"
-
-
-class MainWidget(BaseWidget):
+class MenuScreen(Screen):
     def __init__(self):
-        super(MainWidget, self).__init__()
+        super(MenuScreen, self).__init__()
+        main_layout = BoxLayout(orientation='vertical')
 
-        self.bg = Rectangle(
-            source="./images/vzmpv432havx.jpg", pos=self.pos, size=Window.size
-        )
-        self.canvas.add(self.bg)
+        toggle_layout = BoxLayout(orientation='horizontal')
+        self.opp_btn = ToggleButton(text='opp', group='game_choice', state='down')
+        self.flex_btn = ToggleButton(text='flex', group='game_choice')
 
-        self.audio = Audio(2)
-        self.synth = Synth(SF_PATH)
-        self.audio.set_generator(self.synth)
+        start_btn = Button(text='start')
+        #start_btn = Button(text='Hello', size_hint=(None, None), pos_hint={'right':0.5, 'top':1})
+        start_btn.bind(on_release=self.change_screen)
 
-        self.notes = NoteSequencer(
-            self.synth,
-            [
-                69,
-                72,
-                76,
-                81,
-                [83, 68],
-                76,
-                72,
-                83,
-                [84, 67],
-                76,
-                72,
-                84,
-                [78, 66],
-                74,
-                69,
-                74,
-                [76, 65],
-                72,
-                69,
-                72,
-                [76, 65],
-                72,
-                69,
-                [71, 50],
-                [72, 45],
-                [72, 45],
-            ],
-        )
+        toggle_layout.add_widget(self.opp_btn)
+        toggle_layout.add_widget(self.flex_btn)
+        main_layout.add_widget(toggle_layout)
+        main_layout.add_widget(start_btn)
 
-        self.objects = AnimGroup()
+        self.add_widget(main_layout)
 
-        # add rockets to screen
-        self.rockets = []
-        num_inter = 4
-        for i in range(num_inter):
-            x = 200  # near left edge of screen
-            y = np.interp((i), (0, num_inter), (200, int(Window.height * 0.8)))
-
-            hue = np.interp((i), (0, num_inter), (0, 255))
-            color = (hue, 0.5, 0.5)
-            pos = (x, y)
-
-            rocket = Rocket(
-                pos, (200, 100), color, self.add_widget
-            )  # add_widget is the callback
-            self.rockets.append(rocket)  # index corresponds to finger gesture
-            self.objects.add(rocket)
-
-        self.canvas.add(self.objects)
-
-        kMargin = Window.width * 0.005
-        kCursorAreaSize = (
-            Window.width / 4 - 2 * kMargin,
-            Window.height / 4 - 2 * kMargin,
-        )
-        kCursorAreaPos = (
-            Window.width - kCursorAreaSize[0] - kMargin,
-            kMargin,
-        )
-        self.gesture = GestureWidget(
-            cursor_area_pos=kCursorAreaPos,
-            cursor_area_size=kCursorAreaSize,
-            size_range=(1, 5),
-            display_trailing_cursors=False,
-        )
-        self.canvas.add(self.gesture)
-
-        self.touching = False
-        self.TOUCH = 10
-
-        self.label = topleft_label()
-        self.add_widget(self.label)
-
-    def on_update(self):
-        self.audio.on_update()
-        self.gesture.on_update()
-        self.gesture.check_touch()
-
-        touch = self.gesture.get_any_touch_state()
-        if touch:
-            if not self.touching:
-                self.notes.noteon(self.TOUCH)
-                self.touching = True
+    def change_screen(self, btn):
+        if self.opp_btn.state == 'down':
+            game = 'opp'
         else:
-            if self.touching:
-                self.notes.noteoff(self.TOUCH)
-                self.touching = False
+            game = 'flex'
+        game_screen.init_game(game)
+        sm.switch_to(game_screen)
 
-        self.label.text = ""
-        self.label.text += str(getLeapInfo())
+class GameScreen(Screen):
+    def __init__(self):
+        super(GameScreen, self).__init__()
 
-    def on_layout(self, window_size):
-        # resize background
-        ASPECT = 16 / 9
-        width = min(Window.width, Window.height * ASPECT)
-        height = width / ASPECT
-        bg_size = np.array([width, height])
-        bg_pos = (np.array([Window.width, Window.height]) - bg_size) / 2
-        self.bg.pos = bg_pos
-        self.bg.size = bg_size
+        self.game_widget = None
 
-        # resize gesture widget
-        kMargin = width * 0.005
-        kCursorAreaSize = (
-            width / 4 - 2 * kMargin,
-            height / 4 - 2 * kMargin,
-        )
-        kCursorAreaPos = (
-            bg_pos[0] + width - kCursorAreaSize[0] - kMargin,
-            bg_pos[1] + kMargin,
-        )
-        self.gesture.resize_display(kCursorAreaPos, kCursorAreaSize)
+        self.exit_btn = Button(text='exit', size_hint=(0.1, 0.1), pos_hint={'left':0, 'bottom':0})
+        self.exit_btn.bind(on_release=self.exit_game)
+        self.add_widget(self.exit_btn, index=2)
 
-        # resize label
-        resize_topleft_label(self.label)
+    def init_game(self, game):
+        assert(game == 'opp')
+        self.game_widget = OppWidget()
+        self.add_widget(self.game_widget)
 
-    # proxy while we work on gesture detection
-    def on_key_down(self, keycode, modifiers):
-        gesture_proxy = lookup(keycode[1], "qwer", (1, 2, 3, 4))
-        if gesture_proxy:
-            # make rocket shoot
-            # pass
-            print("keypress")
+    def exit_game(self, btn):
+        Clock.unschedule(self.game_widget._update)
+        #for t in g_terminate_funcs:
+            #t()
+        self.remove_widget(self.game_widget)
+        sm.switch_to(menu_screen)
 
-            self.rockets[gesture_proxy - 1].flame_on()
-            self.notes.noteon(keycode[1])
+sm = ScreenManager(transition=FadeTransition())
+menu_screen = MenuScreen()
+game_screen = GameScreen()
 
-    def on_key_up(self, keycode):
-        gesture_proxy = lookup(keycode[1], "qwer", (1, 2, 3, 4))
-        if gesture_proxy:
-            # stop rocket shooting
-            self.rockets[gesture_proxy - 1].flame_off()
-            self.notes.noteoff(keycode[1])
+class MainApp(App):
+    def build(self):
+        sm.add_widget(MenuScreen())
+        return sm
 
-
-if __name__ == "__main__":
-    run(MainWidget)
-    # run(MainWidget, fullscreen=True)
+if __name__ == '__main__':
+    MainApp().run()
