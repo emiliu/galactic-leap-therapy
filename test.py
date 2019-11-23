@@ -1,11 +1,20 @@
 from kivy.app import App
+from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
-from kivy.uix.screenmanager import Screen, ScreenManager, FallOutTransition
-from main import MainWidget
+from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
+from kivy.uix.togglebutton import ToggleButton
+#from main import MainWidget as OppWidget
+import sys
+sys.path.append('..')
+from unit3.class3.pset3 import MainWidget3 as OppWidget
+#from pset7 import MainWidget as OppWidget
 
+from common.core import g_terminate_funcs
+
+'''
 Builder.load_string("""
 <MenuScreen>:
     BoxLayout:
@@ -23,96 +32,66 @@ Builder.load_string("""
         Button:
             text: 'start'
             on_press: root.manager.current = 'game'
-
-<SettingsScreen>:
-    BoxLayout:
-        Button:
-            text: 'My settings button'
-        Button:
-            text: 'Back to menu'
-            on_press: root.manager.current = 'menu'
-
-<CustomDropDown>:
-    Button:
-        id: btn
-        text: 'Press'
-        on_release: dropdown.open(self)
-        size_hint_y: None
-        height: '48dp'
-
-    DropDown:
-        id: dropdown
-        on_parent: dropdown.dismiss()
-        on_select: btn.text = '{}'.format(args[1])
-
-        Button:
-            text: 'Opposition'
-            size_hint_y: None
-            height: 44
-            on_release: dropdown.select('item1')
-        Button:
-            text: 'Flexion'
-            size_hint_y: None
-            height: 44
-            on_release: root.select('item2')
-
-<GamePicker>:
-    ToggleButton:
-        text: 'opp'
-        group: 'game'
-    ToggleButton:
-        text: 'flex'
-        group: 'game'
 """)
+'''
 
-class CustomDropDown(BoxLayout):
-    pass
-
-class GamePicker(BoxLayout):
-    pass
 
 class MenuScreen(Screen):
-    pass
+    def __init__(self):
+        super(MenuScreen, self).__init__()
+        main_layout = BoxLayout(orientation='vertical')
 
-#class SettingsScreen(Screen):
-    #pass
+        toggle_layout = BoxLayout(orientation='horizontal')
+        self.opp_btn = ToggleButton(text='opp', group='game_choice', state='down')
+        self.flex_btn = ToggleButton(text='flex', group='game_choice')
+
+        start_btn = Button(text='start')
+        #start_btn = Button(text='Hello', size_hint=(None, None), pos_hint={'right':0.5, 'top':1})
+        start_btn.bind(on_release=self.change_screen)
+
+        toggle_layout.add_widget(self.opp_btn)
+        toggle_layout.add_widget(self.flex_btn)
+        main_layout.add_widget(toggle_layout)
+        main_layout.add_widget(start_btn)
+
+        self.add_widget(main_layout)
+
+    def change_screen(self, btn):
+        if self.opp_btn.state == 'down':
+            game = 'opp'
+        else:
+            game = 'flex'
+        game_screen.init_game(game)
+        sm.switch_to(game_screen)
 
 class GameScreen(Screen):
-    pass
-
-class Menu(Screen):
     def __init__(self):
-        super(Menu, self).__init__()
-        self.start_button = Button(text='start')
-        '''
-        dropdown = CustomDropDown()
-        mainbutton = Button(text='Hello', size_hint=(None, None), pos_hint={'right':0.5, 'top':1})
-        mainbutton.bind(on_release=dropdown.open)
-        dropdown.bind(on_select=lambda instance, x: setattr(mainbutton, 'text', x))
-        layout = BoxLayout(orientation='vertical')#, padding=[20, 20, 20, 20])
-        layout.add_widget(mainbutton)
-        #layout.add_widget(dropdown)
-        self.add_widget(layout)
-        '''
-        dropdown = GamePicker()
-        self.add_widget(dropdown)
-        '''
-        for opt in ('opposition', 'flexion'):
-            btn = Button(text=opt, size_hint_y=None, height=44)
-            btn.bind(on_release=lambda btn: self.options.select(btn.text))
-            self.options.add_widget(btn)
-        self.add_widget(self.options)
-        '''
-        #self.add_widget(self.start_button)
+        super(GameScreen, self).__init__()
 
-#sm.add_widget(SettingsScreen(name='settings'))
+        self.game_widget = None
+
+        self.exit_btn = Button(text='exit', size_hint=(0.1, 0.1), pos_hint={'left':0, 'bottom':0})
+        self.exit_btn.bind(on_release=self.exit_game)
+        self.add_widget(self.exit_btn, index=2)
+
+    def init_game(self, game):
+        assert(game == 'opp')
+        self.game_widget = OppWidget()
+        self.add_widget(self.game_widget)
+
+    def exit_game(self, btn):
+        Clock.unschedule(self.game_widget._update)
+        #for t in g_terminate_funcs:
+            #t()
+        self.remove_widget(self.game_widget)
+        sm.switch_to(menu_screen)
+
+sm = ScreenManager(transition=FadeTransition())
+menu_screen = MenuScreen()
+game_screen = GameScreen()
 
 class TestApp(App):
     def build(self):
-        #screen = Screen(name="game")
-        #screen.add_widget(MainWidget())
-        #sm.add_widget(screen)
-        sm = ScreenManager(transition=FallOutTransition())
         sm.add_widget(MenuScreen())
         return sm
 
