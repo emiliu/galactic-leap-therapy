@@ -30,7 +30,7 @@ class Rocket(InstructionGroup):
             color=Color(hsv=color),
             cpos=pos,
             segments=4,
-            source="images/ufo2.png",
+            source="images/rocketship.png",
         )
 
         self.add(self.shape)
@@ -43,10 +43,13 @@ class Rocket(InstructionGroup):
         add_funct(self.flame)
 
     def flame_on(self):
-        self.flame.start()
+        #self.flame.start()
+        self.shape.source = "images/green_ship.png"
+
 
     def flame_off(self):
-        self.flame.stop()
+        #self.flame.stop()
+        self.shape.source = "images/rocketship.png"
 
 
 class NoteRoads(InstructionGroup):
@@ -115,7 +118,7 @@ class FlexShip(InstructionGroup):
             csize=self.size,
             cpos=pos,
             segments=4,
-            source="images/redship.png",
+            source="images/yellowship.png",
         )
 
         self.add(self.shape)
@@ -133,7 +136,20 @@ class FlexShip(InstructionGroup):
             pos = (self.shape.pos[0], self.shape.pos[axis]+inc)
 
         if pos[0] > 0 and pos[0] < Window.width-100:
-            if pos[1] > 0 and pos[1] < Window.height:
+            if pos[1] > 0 and pos[1] < Window.height-100:
+        
+                self.shape.pos = pos
+
+    def set_display(self, inc, axis):
+        if axis == 0:
+            new_pt = Window.width/2 + inc*50
+            pos = (new_pt, self.shape.pos[1])
+        else:
+            new_pt = Window.height/2 + inc*50
+            pos = (self.shape.pos[0], new_pt)
+
+        if pos[0] > 0 and pos[0] < Window.width-100:
+            if pos[1] > 0 and pos[1] < Window.height-100:
         
                 self.shape.pos = pos
 

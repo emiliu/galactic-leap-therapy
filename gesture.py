@@ -246,12 +246,13 @@ class GestureWidget(InstructionGroup):
         return dist
 
     def get_directionality(self, axis, thresh):
-        #
+        #return distance that the rocket is meant to move
         dist = self.get_relative_wrist_position(axis)
 
-        if np.abs(dist) > .5:
+        if np.abs(dist) > thresh:
             return dist*10
         return 0
+
 
         
 

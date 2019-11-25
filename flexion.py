@@ -31,6 +31,8 @@ from gesture import GestureWidget
 from graphics import Rocket, NoteRoads, Laser, FlexShip
 from sounds import NoteCluster, NoteSequencer
 
+from guitarhero import AudioController, SongData, BeatMatchDisplay, Player
+
 
 SF_PATH = "data/FluidR3_GM.sf2"
 
@@ -38,17 +40,27 @@ SF_PATH = "data/FluidR3_GM.sf2"
 
 class MainWidget(BaseWidget):
 	def __init__(self):
+
+
 		super(MainWidget, self).__init__()
 		
 
 		self.bg = Rectangle(
-			source="./images/horizon_bh.jpg", pos=self.pos, size=Window.size
+			source="./images/vaporwav.jpg", pos=self.pos, size=Window.size
 		)
 		self.canvas.add(self.bg)
 
-		self.audio = Audio(2)
-		self.synth = Synth(SF_PATH)
-		self.audio.set_generator(self.synth)
+
+		data_manager = SongData()
+		gem_data, bar_data = data_manager.read_data("songs/annot_test.txt", "songs/annot_barlines.txt")
+		
+
+		self.audio_player = AudioController()
+		self.display = BeatMatchDisplay(gem_data, bar_data, self.audio_player.get_time)
+
+
+		self.player = Player(gem_data, self.display, self.audio_player)
+
 
 		self.objects = AnimGroup()
 
@@ -76,7 +88,9 @@ class MainWidget(BaseWidget):
 			size_range=(1, 5),
 			display_trailing_cursors=False,
 		)
+
 		self.canvas.add(self.gesture)
+		self.canvas.add(self.display)
 
 		self.touching = False
 		self.TOUCH = 10
@@ -84,20 +98,34 @@ class MainWidget(BaseWidget):
 		self.label = topleft_label()
 		self.add_widget(self.label)
 
+
+	def on_key_down(self, keycode, modifiers):
+		# play / pause toggle
+		if keycode[1] == 'p':
+			self.audio_player.toggle()
+
 	def on_update(self):
-		axis = 1
-		thresh = 1
-		
-		self.audio.on_update()
+		axis = 0
+		thresh = .05
+
 		self.gesture.on_update()
 
 		
 		dist = self.gesture.get_directionality(axis, thresh)
-		self.rocket.move_display(dist, axis)
+		self.rocket.set_display(dist, axis)
+		#change to self.rocket.move_display() for alternate mode
 		
 
 		self.label.text = ""
 		self.label.text += str(getLeapInfo())
+		self.label.text += '\nScore: %.2f\n' % self.player.score
+		self.label.text += 'Time: %.2f\n' % self.audio_player.get_time()
+
+
+
+		self.audio_player.on_update()
+		self.display.on_update()
+		self.player.on_update()
 
 	def on_layout(self, window_size):
 		# resize background
@@ -121,23 +149,10 @@ class MainWidget(BaseWidget):
 		)
 		self.gesture.resize_display(kCursorAreaPos, kCursorAreaSize)
 
+
+
 		# resize label
 		resize_topleft_label(self.label)
-
-	# proxy while we work on gesture detection
-	def on_key_down(self, keycode, modifiers):
-		gesture_proxy = lookup(keycode[1], "qwer", (1, 2, 3, 4))
-		if gesture_proxy:
-			# make rocket shoot
-			# pass
-			print("keypress")
-
-
-	def on_key_up(self, keycode):
-		gesture_proxy = lookup(keycode[1], "qwer", (1, 2, 3, 4))
-		if gesture_proxy:
-			# stop rocket shooting
-			pass
 
 
 
