@@ -1,11 +1,14 @@
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.graphics import Rectangle
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
 from kivy.uix.togglebutton import ToggleButton
+
+import numpy as np
 
 from flexion import MainWidget as FlexWidget
 from opposition import MainWidget as OppWidget
@@ -17,11 +20,19 @@ class MenuScreen(Screen):
     def __init__(self):
         super(MenuScreen, self).__init__()
 
-        toggle_layout = BoxLayout(orientation='horizontal', size_hint=(0.5, 0.1), pos_hint={'center_x':0.5, 'center_y':0.7})
+        self.bg = Rectangle(
+            source="images/splash.png", size=Window.size
+        )
+        self.window_size = (0, 0)
+        self.scale_bg()
+        self.canvas.add(self.bg)
+        Clock.schedule_interval(self.scale_bg, 0)
+
+        toggle_layout = BoxLayout(orientation='horizontal', size_hint=(0.5, 0.1), pos_hint={'center_x':0.5, 'center_y':0.25})
         self.opp_btn = ToggleButton(text='opp', group='game_choice', state='down')
         self.flex_btn = ToggleButton(text='flex', group='game_choice')
 
-        start_btn = Button(text='start', size_hint=(0.2, 0.1), pos_hint={'center_x': 0.5, 'center_y': 0.4})
+        start_btn = Button(text='start', size_hint=(0.2, 0.1), pos_hint={'center_x': 0.5, 'center_y': 0.1})
         start_btn.bind(on_release=self.change_screen)
 
         toggle_layout.add_widget(self.opp_btn)
@@ -36,6 +47,18 @@ class MenuScreen(Screen):
             game = 'flex'
         game_screen.init_game(game)
         sm.switch_to(game_screen)
+
+    def scale_bg(self, *args):
+        # resize background
+        if Window.size != self.window_size:
+            self.window_size = Window.size
+            ASPECT = 16 / 9
+            width = min(Window.width, Window.height * ASPECT)
+            height = width / ASPECT
+            bg_size = np.array([width, height])
+            bg_pos = (np.array([Window.width, Window.height]) - bg_size) / 2
+            self.bg.pos = bg_pos
+            self.bg.size = bg_size
 
 class GameScreen(Screen):
     def __init__(self):
