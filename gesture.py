@@ -200,6 +200,10 @@ class GestureWidget(InstructionGroup):
         # return whether a finger is touched or not
         return self.touch_states[finger]
 
+    def get_touch_states(self):
+        # return fingers touched
+        return self.touch_states
+
     def get_any_touch_state(self):
         # return whether any fingers are currently touched
         return any(self.touch_states)

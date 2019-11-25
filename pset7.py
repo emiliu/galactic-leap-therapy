@@ -18,6 +18,7 @@ from kivy.graphics import PushMatrix, PopMatrix, Translate
 
 import numpy as np
 
+from gesture import GestureWidget
 
 FRAME_RATE = 44100
 
@@ -48,6 +49,28 @@ class MainWidget(BaseWidget) :
         self.score = topleft_label()
         self.add_widget(self.score)
 
+        kMargin = Window.width * 0.005
+        kCursorAreaSize = (
+            Window.width / 4 - 2 * kMargin,
+            Window.height / 4 - 2 * kMargin,
+        )
+        kCursorAreaPos = (
+            Window.width - kCursorAreaSize[0] - kMargin,
+            kMargin,
+        )
+        self.gesture = GestureWidget(
+            cursor_area_pos=kCursorAreaPos,
+            cursor_area_size=kCursorAreaSize,
+            size_range=(1, 5),
+            display_trailing_cursors=False,
+        )
+        self.canvas.add(self.gesture)
+
+        #self.touching = False
+        #self.TOUCH = 10
+
+        self.audio.toggle()
+
     def on_key_down(self, keycode, modifiers):
         # play / pause toggle
         if keycode[1] == 'p':
@@ -73,6 +96,35 @@ class MainWidget(BaseWidget) :
 
         self.score.text = 'Score: %d\n' % self.player.score
         self.score.text += 'Streak: %d' % self.player.streak
+
+        self.gesture.on_update()
+
+        touches = self.gesture.get_touch_states()
+        for finger in range(4):
+            touch = self.gesture.check_touch_for_finger(finger + 1)
+            if touch:
+                self.player.on_button_down(finger)
+            #elif not touches[finger]:
+                #elf.player.on_button_up(finger)
+
+        '''
+        self.gesture.check_touch()
+
+        #touch = self.gesture.get_any_touch_state()
+        #print(touch)
+        if any(touch):
+            if not self.touching:
+                #self.notes.noteon(self.TOUCH)
+                for i in range(len(touch)):
+                    if touch[i]:
+                        self.player.on_button_down(i)
+                self.touching = True
+        else:
+            if self.touching:
+                #self.notes.noteoff(self.TOUCH)
+                self.player.on_button_up(touch)
+                self.touching = False
+        '''
 
 
 # creates the Audio driver
@@ -130,7 +182,7 @@ class SongData(object):
                 split = line.strip().split(',')
                 #self.solo.append((round(float(split[0]) * FRAME_RATE), self.solo[-1][1], False))
                 self.solo[-1].append(round(float(split[0]) * FRAME_RATE))
-                self.solo.append([round(float(split[0]) * FRAME_RATE), int(split[1])-1])
+                self.solo.append([round(float(split[0]) * FRAME_RATE), min(int(split[1])-1, 3)])
 
         # store bar lines as the frame locations
         with open(bg_path) as f:
@@ -144,10 +196,6 @@ class GemBarDisplay(InstructionGroup):
         self.color = color
         self.add(self.color)
         self.add(Rectangle(pos=pos, size=size))
-
-    # change to display this gem being hit
-    def on_hit(self):
-        print('hit')
 
     # change to display this gem being hit
     def on_hit(self):
@@ -212,10 +260,11 @@ class ButtonDisplay(InstructionGroup):
 
     # displays when button is down (and if it hit a gem)
     def on_down(self, hit):
-        if hit:
-            self.texture_color.a = 1
-        else:
-            self.color.a = 0.8
+        pass
+        #if hit:
+            #self.texture_color.a = 1
+        #else:
+            #self.color.a = 0.8
 
     # back to normal state
     def on_up(self):
@@ -246,7 +295,7 @@ class BeatMatchDisplay(InstructionGroup):
                        (0.380, 0.110, 0.208))
 
         offset = WIDTH / 8
-        diff = (WIDTH - 2 * offset) / 4
+        diff = (WIDTH - 2 * offset) / 3
 
         # translate object
         self.trans = Translate()
@@ -266,7 +315,7 @@ class BeatMatchDisplay(InstructionGroup):
         # buttons
         self.buttons = []
         btn_texture = None # Image('cardboard.png').texture
-        for i in range(5):
+        for i in range(4):
             button = ButtonDisplay((i*diff+offset, NOW_BAR), Color(*self.colors[i]), texture=btn_texture)
             self.buttons.append(button)
             self.add(button)
@@ -343,12 +392,13 @@ class Player(object):
                     hit = True
                     self.score += 1
                     self.streak += 1
+                    self.audio_ctrl.set_mute(False)
 
                 # this gem is used
                 self.gem_idx += 1
 
         self.display.on_button_down(lane, hit)
-        self.audio_ctrl.set_mute(not hit)
+        #self.audio_ctrl.set_mute(not hit)
 
         # miss handling
         if not hit:
