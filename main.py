@@ -8,31 +8,40 @@ from kivy.uix.dropdown import DropDown
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
 from kivy.uix.togglebutton import ToggleButton
 
+import sys
 import numpy as np
 
 from flexion import MainWidget as FlexWidget
 from pset7 import MainWidget as OppWidget
 
-#from common.core import g_terminate_funcs
+# from common.core import g_terminate_funcs
 
 
 class MenuScreen(Screen):
-    def __init__(self):
+    def __init__(self, switch_screen_callback):
         super(MenuScreen, self).__init__()
 
-        self.bg = Rectangle(
-            source="images/splash.png", size=Window.size
-        )
+        self.switch_screen = switch_screen_callback
+
+        self.bg = Rectangle(source="images/splash.png", size=Window.size)
         self.window_size = (0, 0)
         self.scale_bg()
         self.canvas.add(self.bg)
         Clock.schedule_interval(self.scale_bg, 0)
 
-        toggle_layout = BoxLayout(orientation='horizontal', size_hint=(0.5, 0.1), pos_hint={'center_x':0.5, 'center_y':0.25})
-        self.opp_btn = ToggleButton(text='opp', group='game_choice', state='down')
-        self.flex_btn = ToggleButton(text='flex', group='game_choice')
+        toggle_layout = BoxLayout(
+            orientation="horizontal",
+            size_hint=(0.5, 0.1),
+            pos_hint={"center_x": 0.5, "center_y": 0.25},
+        )
+        self.opp_btn = ToggleButton(text="opp", group="game_choice", state="down")
+        self.flex_btn = ToggleButton(text="flex", group="game_choice")
 
-        start_btn = Button(text='start', size_hint=(0.2, 0.1), pos_hint={'center_x': 0.5, 'center_y': 0.1})
+        start_btn = Button(
+            text="start",
+            size_hint=(0.2, 0.1),
+            pos_hint={"center_x": 0.5, "center_y": 0.1},
+        )
         start_btn.bind(on_release=self.change_screen)
 
         toggle_layout.add_widget(self.opp_btn)
@@ -41,12 +50,12 @@ class MenuScreen(Screen):
         self.add_widget(start_btn)
 
     def change_screen(self, btn):
-        if self.opp_btn.state == 'down':
-            game = 'opp'
+        if self.opp_btn.state == "down":
+            game_type = "opp"
         else:
-            game = 'flex'
-        game_screen.init_game(game)
-        sm.switch_to(game_screen)
+            game_type = "flex"
+
+        self.switch_screen("game", game_type)
 
     def scale_bg(self, *args):
         # resize background
@@ -60,23 +69,25 @@ class MenuScreen(Screen):
             self.bg.pos = bg_pos
             self.bg.size = bg_size
 
+
 class GameScreen(Screen):
-    def __init__(self):
+    def __init__(self, switch_screen_callback):
         super(GameScreen, self).__init__()
 
+        self.switch_screen = switch_screen_callback
         self.game_widget = None
 
-        self.exit_btn = Button(text='exit', size_hint=(0.1, 0.1), pos=(0, 0))
+        self.exit_btn = Button(text="exit", size_hint=(0.1, 0.1), pos=(0, 0))
         self.exit_btn.bind(on_release=self.exit_game)
         self.add_widget(self.exit_btn, index=0)
 
     def init_game(self, game):
-        if game == 'opp':
+        if game == "opp":
             self.game_widget = OppWidget()
-        elif game == 'flex':
+        elif game == "flex":
             self.game_widget = FlexWidget()
         else:
-            raise Exception('No such game')
+            raise Exception("No such game")
         self.add_widget(self.game_widget, index=2)
 
     def exit_game(self, btn):
@@ -87,27 +98,42 @@ class GameScreen(Screen):
         # termination functions used by BaseWidget
         # the only notable thing seems to be closing the audio stream
         # keeping this here in case we decide that's necessary
-        #for t in g_terminate_funcs:
-            #t()
+        # for t in g_terminate_funcs:
+        # t()
 
         self.remove_widget(self.game_widget)
-        sm.switch_to(menu_screen)
+        self.switch_screen("menu")
 
-sm = ScreenManager(transition=FadeTransition())
-menu_screen = MenuScreen()
-game_screen = GameScreen()
 
 class MainApp(App):
-    def build(self):
-        sm.add_widget(MenuScreen())
-        return sm
+    def __init__(self):
+        super().__init__()
 
-if __name__ == '__main__':
+        self.sm = ScreenManager(transition=FadeTransition())
+        self.menu_screen = MenuScreen(self.switch_screen)
+        self.game_screen = GameScreen(self.switch_screen)
+
+    def build(self):
+        self.sm.add_widget(self.menu_screen)
+        return self.sm
+
+    def switch_screen(self, switch_to, game_type=None):
+        if switch_to == "game":
+            assert game_type is not None, "game_type cannot be None"
+            self.game_screen.init_game(game_type)
+            self.sm.switch_to(self.game_screen)
+
+        if switch_to == "menu":
+            self.sm.switch_to(self.menu_screen)
+
+
+if __name__ == "__main__":
     # automatic fullscreen crashes the program for Emily (Linux)
     # but seems to work for everyone else
     # will maybe try to debug this later
-    Window.fullscreen = 'auto'
-    import sys
-    if len(sys.argv) > 1 and sys.argv[1] == 'nofullscreen':
+    Window.fullscreen = "auto"
+    if len(sys.argv) > 1 and sys.argv[1] == "nofullscreen":
         Window.fullscreen = False
+
+    # run the app
     MainApp().run()
