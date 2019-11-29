@@ -25,8 +25,6 @@ FRAME_RATE = 44100
 
 WIDTH = Window.width
 HEIGHT = Window.height
-MEASURE = HEIGHT * 0.2
-NOW_BAR = HEIGHT * 0.25
 
 SLOP = 0.1 * FRAME_RATE
 
@@ -223,6 +221,8 @@ class GemBarDisplay(InstructionGroup):
 
 # display for a single gem at a position with a color (if desired)
 class GemDisplay(InstructionGroup):
+    SIZE = 50
+
     def __init__(self, pos, color, texture=None):
         super(GemDisplay, self).__init__()
         self.texture = texture
@@ -230,12 +230,14 @@ class GemDisplay(InstructionGroup):
         # gem background
         self.color = color
         self.add(self.color)
-        self.ellipse1 = CEllipse(cpos=pos, csize=(50, 50))
+        self.ellipse1 = CEllipse(cpos=pos, csize=(self.SIZE, self.SIZE))
         self.add(self.ellipse1)
         # gem texture
         if texture is not None:
             self.add(Color(1, 1, 1))
-            self.ellipse2 = CEllipse(cpos=pos, csize=(50, 50), texture=texture)
+            self.ellipse2 = CEllipse(
+                cpos=pos, csize=(self.SIZE, self.SIZE), texture=texture
+            )
             self.add(self.ellipse2)
         else:
             self.ellipse2 = None
@@ -244,6 +246,11 @@ class GemDisplay(InstructionGroup):
         self.ellipse1.set_cpos(pos)
         if self.ellipse2 is not None:
             self.ellipse2.set_cpos(pos)
+
+    def set_size_scale(self, scale):
+        self.ellipse1.set_csize((scale * self.SIZE, scale * self.SIZE))
+        if self.ellipse2 is not None:
+            self.ellipse2.set_csize((scale * self.SIZE, scale * self.SIZE))
 
     # change to display this gem being hit
     def on_hit(self):
@@ -294,18 +301,17 @@ class ButtonDisplay(InstructionGroup):
 
 # Displays and controls all game elements: Nowbar, Buttons, BarLines, Gems.
 class BeatMatchDisplay(InstructionGroup):
+    MEASURE = HEIGHT * 0.2
+    NOW_BAR = HEIGHT * 0.25
+    BARLINE_WIDTH = 2
+    NOWBAR_WIDTH = 8
+
     def __init__(self, gem_data):
         super(BeatMatchDisplay, self).__init__()
         self.gem_data = gem_data
 
-        # TODO make these instance variables
-        global MEASURE, NOW_BAR
-
         WIDTH = Window.width
         HEIGHT = Window.height
-        MEASURE = HEIGHT * 0.2
-        NOW_BAR = HEIGHT * 0.25
-        print(WIDTH, HEIGHT)
 
         # collection of lane colors
         self.colors = (
@@ -329,25 +335,27 @@ class BeatMatchDisplay(InstructionGroup):
             line = Line(
                 points=[
                     0,
-                    bar / FRAME_RATE * MEASURE,
+                    bar / FRAME_RATE * self.MEASURE,
                     WIDTH,
-                    bar / FRAME_RATE * MEASURE,
+                    bar / FRAME_RATE * self.MEASURE,
                 ],
-                width=2,
+                width=self.BARLINE_WIDTH,
             )
             self.lines.append(line)
             self.add(line)
 
         # now bar
         self.add(Color(0.5, 0.5, 0.5))
-        self.add(Line(points=[0, NOW_BAR, WIDTH, NOW_BAR], width=10))
+        self.add(
+            Line(points=[0, self.NOW_BAR, WIDTH, self.NOW_BAR], width=self.NOWBAR_WIDTH)
+        )
 
         # buttons
         self.buttons = []
         btn_texture = None  # Image('cardboard.png').texture
         for i in range(4):
             button = ButtonDisplay(
-                (i * diff + offset, NOW_BAR),
+                (i * diff + offset, self.NOW_BAR),
                 Color(*self.colors[i]),
                 texture=btn_texture,
             )
@@ -363,16 +371,16 @@ class BeatMatchDisplay(InstructionGroup):
             if len(gem) < 3:
                 continue
             gem_obj = GemDisplay(
-                (gem[1] * diff + offset, gem[0] / FRAME_RATE * MEASURE),
+                (gem[1] * diff + offset, gem[0] / FRAME_RATE * self.MEASURE),
                 Color(*self.colors[gem[1]]),
                 texture=gem_texture,
             )
             # gem_obj = GemBarDisplay(
             #    (
             #        gem[1] * diff + offset - gem_width_half,
-            #        gem[0] / FRAME_RATE * MEASURE,
+            #        gem[0] / FRAME_RATE * self.MEASURE,
             #    ),
-            #    (2 * gem_width_half, (gem[2] - gem[0]) / FRAME_RATE * MEASURE),
+            #    (2 * gem_width_half, (gem[2] - gem[0]) / FRAME_RATE * self.MEASURE),
             #    Color(*self.colors[gem[1]]),
             # )
             self.gems.append(gem_obj)
@@ -398,28 +406,72 @@ class BeatMatchDisplay(InstructionGroup):
     def on_update(self, frame):
         offset = Window.width / 8
         diff = (Window.width - 2 * offset) / 3
-        trans_y = -1 * frame / FRAME_RATE * MEASURE + NOW_BAR
+        trans_y = -1 * frame / FRAME_RATE * self.MEASURE + self.NOW_BAR
 
         # update bar lines
         for i in range(len(self.gem_data.bg)):
             bar = self.gem_data.bg[i]
-            self.lines[i].points = [
-                0,
-                bar / FRAME_RATE * MEASURE + trans_y,
-                WIDTH,
-                bar / FRAME_RATE * MEASURE + trans_y,
-            ]
+
+            # compute line endpoint locations
+            real_pt0 = (0, bar / FRAME_RATE * self.MEASURE + trans_y)
+            real_pt1 = (Window.width, bar / FRAME_RATE * self.MEASURE + trans_y)
+            (fake_pt0, size_scale) = self.fake_3d(real_pt0)
+            (fake_pt1, size_scale) = self.fake_3d(real_pt1)
+
+            # set the new locations
+            self.lines[i].points = [*fake_pt0, *fake_pt1]
+            self.lines[i].width = size_scale * self.BARLINE_WIDTH
+
+            # self.lines[i].points = [
+            #    0,
+            #    bar / FRAME_RATE * self.MEASURE + trans_y,
+            #    WIDTH,
+            #    bar / FRAME_RATE * self.MEASURE + trans_y,
+            # ]
 
         # update gems
         gem_count = 0
         for gem in self.gem_data.solo:
             if len(gem) < 3:
                 continue
+
+            # apply translation for real position
+            # apply 3d effect for effective "fake" position
             gem_obj = self.gems[gem_count]
-            gem_obj.set_pos(
-                (gem[1] * diff + offset, gem[0] / FRAME_RATE * MEASURE + trans_y)
+            real_pos = (
+                gem[1] * diff + offset,
+                gem[0] / FRAME_RATE * self.MEASURE + trans_y,
             )
+            (fake_pos, size_scale) = self.fake_3d(real_pos)
+
+            # set the new values
+            gem_obj.set_pos(fake_pos)
+            gem_obj.set_size_scale(size_scale)
             gem_count += 1
+
+    # apply a fake 3d effect to the given point
+    def fake_3d(self, pt):
+        (in_x, in_y) = pt
+
+        # point at "infinity"
+        # roughly center of screen
+        (c_x, c_y) = (Window.width / 2, Window.height * 0.475)
+
+        # compute the scaling constant
+        c = np.tan(self.NOW_BAR / c_y * (np.pi / 2)) / self.NOW_BAR
+
+        # scale y coordinate
+        out_y = np.arctan(in_y * c) / (np.pi / 2) * c_y
+
+        # x coordinate lies on intersection of out_y with
+        # the line from (in_x, self.NOW_BAR) to center of screen
+        m = (in_x - c_x) / (self.NOW_BAR - c_y)
+        out_x = c_x + m * (out_y - c_y)
+
+        # scaling factor for object size
+        size_scale = (out_y - c_y) / (self.NOW_BAR - c_y)
+
+        return ((out_x, out_y), size_scale)
 
 
 # Handles game logic and keeps score.
