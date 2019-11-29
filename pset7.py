@@ -273,17 +273,18 @@ class ButtonDisplay(InstructionGroup):
         self.color = color
         self.add(self.color)
         self.add(CEllipse(cpos=pos, csize=(50, 50)))
-        self.texture_color = Color(0, 0, 0, 0)
+
+        self.texture_color = Color(1, 1, 1, 1)
         self.add(self.texture_color)
         self.add(CEllipse(cpos=pos, csize=(50, 50), texture=texture))
 
-        self.add(Color(1, 1, 1, 1))
-        self.size = (40, 40)
-        self.pos = pos
-        self.shape = CRectangle(
-            csize=self.size, cpos=pos, segments=4, source="images/redship.png"
-        )
-        self.add(self.shape)
+        # self.add(Color(1, 1, 1, 1))
+        # self.size = (40, 40)
+        # self.pos = pos
+        # self.shape = CRectangle(
+        #    csize=self.size, cpos=pos, segments=4, source="images/rocketship.png"
+        # )
+        # self.add(self.shape)
 
     # displays when button is down (and if it hit a gem)
     def on_down(self, hit):
@@ -352,7 +353,8 @@ class BeatMatchDisplay(InstructionGroup):
 
         # buttons
         self.buttons = []
-        btn_texture = None  # Image('cardboard.png').texture
+        # btn_texture = None
+        btn_texture = Image("images/yellowship.png").texture
         for i in range(4):
             button = ButtonDisplay(
                 (i * diff + offset, self.NOW_BAR),
@@ -421,13 +423,6 @@ class BeatMatchDisplay(InstructionGroup):
             # set the new locations
             self.lines[i].points = [*fake_pt0, *fake_pt1]
             self.lines[i].width = size_scale * self.BARLINE_WIDTH
-
-            # self.lines[i].points = [
-            #    0,
-            #    bar / FRAME_RATE * self.MEASURE + trans_y,
-            #    WIDTH,
-            #    bar / FRAME_RATE * self.MEASURE + trans_y,
-            # ]
 
         # update gems
         gem_count = 0
