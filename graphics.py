@@ -43,12 +43,11 @@ class Rocket(InstructionGroup):
         add_funct(self.flame)
 
     def flame_on(self):
-        #self.flame.start()
+        # self.flame.start()
         self.shape.source = "images/green_ship.png"
 
-
     def flame_off(self):
-        #self.flame.stop()
+        # self.flame.stop()
         self.shape.source = "images/rocketship.png"
 
 
@@ -112,13 +111,10 @@ class FlexShip(InstructionGroup):
     def __init__(self, pos):
         super(FlexShip, self).__init__()
 
-        self.size = (80,80)
+        self.size = (80, 80)
         self.pos = pos
         self.shape = CRectangle(
-            csize=self.size,
-            cpos=pos,
-            segments=4,
-            source="images/yellowship.png",
+            csize=self.size, cpos=pos, segments=4, source="images/yellowship.png",
         )
 
         self.add(self.shape)
@@ -129,36 +125,35 @@ class FlexShip(InstructionGroup):
         self.flame.start()
 
     def move_display(self, inc, axis):
-        #move rocket increment along axis (x=0, y=1)
+        # move rocket increment along axis (x=0, y=1)
         if axis == 0:
-            pos = (self.shape.pos[axis]+inc, self.shape.pos[1])
+            pos = (self.shape.pos[axis] + inc, self.shape.pos[1])
         else:
-            pos = (self.shape.pos[0], self.shape.pos[axis]+inc)
+            pos = (self.shape.pos[0], self.shape.pos[axis] + inc)
 
-        if pos[0] > 0 and pos[0] < Window.width-100:
-            if pos[1] > 0 and pos[1] < Window.height-100:
-        
+        if pos[0] > 0 and pos[0] < Window.width - 100:
+            if pos[1] > 0 and pos[1] < Window.height - 100:
+
                 self.shape.pos = pos
 
     def set_display(self, inc, axis):
         if axis == 0:
-            new_pt = Window.width/2 + inc*50
+            new_pt = Window.width / 2 + inc * 50
             pos = (new_pt, self.shape.pos[1])
         else:
-            new_pt = Window.height/2 + inc*50
+            new_pt = Window.height / 2 + inc * 50
             pos = (self.shape.pos[0], new_pt)
 
-        if pos[0] > 0 and pos[0] < Window.width-100:
-            if pos[1] > 0 and pos[1] < Window.height-100:
-        
+        if pos[0] > 0 and pos[0] < Window.width - 100:
+            if pos[1] > 0 and pos[1] < Window.height - 100:
+
                 self.shape.pos = pos
-
-
 
 
 class MainWidget(BaseWidget):
     def __init__(self):
         super(MainWidget).__init__()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run(MainWidget)

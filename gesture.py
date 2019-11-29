@@ -242,26 +242,20 @@ class GestureWidget(InstructionGroup):
         return np.array([pt[0], 1 - pt[2], 1 - pt[1]])
 
     def get_relative_wrist_position(self, axis):
-        #0 axis is x/-z, 1 axis is y/-z
-        #middle finger to palm vectors
-        vector_pm = self.finger_pts[0, 2]-self.palm_pts[0]
-        dist = np.arctan(vector_pm[axis]/-vector_pm[2])
+        # 0 axis is x/-z, 1 axis is y/-z
+        # middle finger to palm vectors
+        vector_pm = self.finger_pts[0, 2] - self.palm_pts[0]
+        dist = np.arctan(vector_pm[axis] / -vector_pm[2])
 
         return dist
 
     def get_directionality(self, axis, thresh):
-        #return distance that the rocket is meant to move
+        # return distance that the rocket is meant to move
         dist = self.get_relative_wrist_position(axis)
 
         if np.abs(dist) > thresh:
-            return dist*10
+            return dist * 10
         return 0
-
-
-        
-
-        
-
 
 
 class MainWidget(BaseWidget):
@@ -283,7 +277,6 @@ class MainWidget(BaseWidget):
         wrist_pos = self.gesture.get_relative_wrist_position(0)
         if np.abs(wrist_pos) > 1:
             print(wrist_pos)
-
 
 
 if __name__ == "__main__":
