@@ -223,15 +223,27 @@ class GemBarDisplay(InstructionGroup):
 
 # display for a single gem at a position with a color (if desired)
 class GemDisplay(InstructionGroup):
-    def __init__(self, pos, color, texture):
+    def __init__(self, pos, color, texture=None):
         super(GemDisplay, self).__init__()
+        self.texture = texture
+
         # gem background
         self.color = color
         self.add(self.color)
-        self.add(CEllipse(cpos=pos, csize=(50, 50)))
+        self.ellipse1 = CEllipse(cpos=pos, csize=(50, 50))
+        self.add(self.ellipse1)
         # gem texture
-        self.add(Color(1, 1, 1))
-        self.add(CEllipse(cpos=pos, csize=(50, 50), texture=texture))
+        if texture is not None:
+            self.add(Color(1, 1, 1))
+            self.ellipse2 = CEllipse(cpos=pos, csize=(50, 50), texture=texture)
+            self.add(self.ellipse2)
+        else:
+            self.ellipse2 = None
+
+    def set_pos(self, pos):
+        self.ellipse1.set_cpos(pos)
+        if self.ellipse2 is not None:
+            self.ellipse2.set_cpos(pos)
 
     # change to display this gem being hit
     def on_hit(self):
@@ -311,22 +323,20 @@ class BeatMatchDisplay(InstructionGroup):
         self.trans = Translate()
 
         # bar lines
-        self.add(PushMatrix())
-        self.add(self.trans)
         self.add(Color(1, 1, 1))
+        self.lines = []
         for bar in self.gem_data.bg:
-            self.add(
-                Line(
-                    points=[
-                        0,
-                        bar / FRAME_RATE * MEASURE,
-                        WIDTH,
-                        bar / FRAME_RATE * MEASURE,
-                    ],
-                    width=2,
-                )
+            line = Line(
+                points=[
+                    0,
+                    bar / FRAME_RATE * MEASURE,
+                    WIDTH,
+                    bar / FRAME_RATE * MEASURE,
+                ],
+                width=2,
             )
-        self.add(PopMatrix())
+            self.lines.append(line)
+            self.add(line)
 
         # now bar
         self.add(Color(0.5, 0.5, 0.5))
@@ -345,26 +355,28 @@ class BeatMatchDisplay(InstructionGroup):
             self.add(button)
 
         # gems
-        self.add(PushMatrix())
-        self.add(self.trans)
         self.gems = []
         gem_width_half = 25
         gem_texture = None  # Image('texture.png').texture
+        print(self.gem_data.solo[1])
         for gem in self.gem_data.solo:
             if len(gem) < 3:
                 continue
-            # gem_obj = GemDisplay((gem[1]*diff+offset, gem[0]/FRAME_RATE * MEASURE), Color(*self.colors[gem[1]]), texture=gem_texture)
-            gem_obj = GemBarDisplay(
-                (
-                    gem[1] * diff + offset - gem_width_half,
-                    gem[0] / FRAME_RATE * MEASURE,
-                ),
-                (2 * gem_width_half, (gem[2] - gem[0]) / FRAME_RATE * MEASURE),
+            gem_obj = GemDisplay(
+                (gem[1] * diff + offset, gem[0] / FRAME_RATE * MEASURE),
                 Color(*self.colors[gem[1]]),
+                texture=gem_texture,
             )
+            # gem_obj = GemBarDisplay(
+            #    (
+            #        gem[1] * diff + offset - gem_width_half,
+            #        gem[0] / FRAME_RATE * MEASURE,
+            #    ),
+            #    (2 * gem_width_half, (gem[2] - gem[0]) / FRAME_RATE * MEASURE),
+            #    Color(*self.colors[gem[1]]),
+            # )
             self.gems.append(gem_obj)
             self.add(gem_obj)
-        self.add(PopMatrix())
 
     # called by Player. Causes the right thing to happen
     def gem_hit(self, gem_idx):
@@ -384,7 +396,30 @@ class BeatMatchDisplay(InstructionGroup):
 
     # call every frame to handle animation needs
     def on_update(self, frame):
-        self.trans.y = -1 * frame / FRAME_RATE * MEASURE + NOW_BAR
+        offset = Window.width / 8
+        diff = (Window.width - 2 * offset) / 3
+        trans_y = -1 * frame / FRAME_RATE * MEASURE + NOW_BAR
+
+        # update bar lines
+        for i in range(len(self.gem_data.bg)):
+            bar = self.gem_data.bg[i]
+            self.lines[i].points = [
+                0,
+                bar / FRAME_RATE * MEASURE + trans_y,
+                WIDTH,
+                bar / FRAME_RATE * MEASURE + trans_y,
+            ]
+
+        # update gems
+        gem_count = 0
+        for gem in self.gem_data.solo:
+            if len(gem) < 3:
+                continue
+            gem_obj = self.gems[gem_count]
+            gem_obj.set_pos(
+                (gem[1] * diff + offset, gem[0] / FRAME_RATE * MEASURE + trans_y)
+            )
+            gem_count += 1
 
 
 # Handles game logic and keeps score.
