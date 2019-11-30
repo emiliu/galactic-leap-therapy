@@ -131,6 +131,9 @@ class FlexShip(InstructionGroup):
             np.clip(new_pos, self.size / 2, Window.size - self.size / 2)
         )
 
+    def get_position(self):
+        return self.shape.get_cpos()
+
 
 class GemBarDisplay(InstructionGroup):
     def __init__(self, pos, size, color=None):

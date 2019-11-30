@@ -27,16 +27,15 @@ class MainWidget(BaseWidget):
     def __init__(self):
         super(MainWidget, self).__init__()
 
+        # add background
         self.bg = Rectangle(
             source="images/vzmpv432havx.jpg", pos=self.pos, size=Window.size
         )
         self.canvas.add(self.bg)
 
+        # load song data
         self.data = SongData()
         self.data.read_data("data/solo.csv", "data/beats.csv")
-
-        self.display = BeatMatchDisplay(self.data)
-        self.canvas.add(self.display)
         self.audio = AudioController(
             [
                 "data/YouGotAnotherThingComin_LD4.wav",
@@ -45,11 +44,16 @@ class MainWidget(BaseWidget):
             ],
             use_miss_sound=False,
         )
+
+        # create game
+        self.display = BeatMatchDisplay(self.data)
         self.player = Player(self.data, self.display, self.audio)
+        self.canvas.add(self.display)
 
         self.score = topleft_label()
         self.add_widget(self.score)
 
+        # add gesture widget
         kMargin = Window.width * 0.005
         kCursorAreaSize = (
             Window.width / 4 - 2 * kMargin,
@@ -70,7 +74,7 @@ class MainWidget(BaseWidget):
         # self.touching = False
         # self.TOUCH = 10
 
-        self.audio.toggle()
+        # self.audio.toggle()
 
     def on_key_down(self, keycode, modifiers):
         # play / pause toggle
@@ -92,15 +96,14 @@ class MainWidget(BaseWidget):
         # update game based on audio time
         self.audio.on_update()
         time = self.audio.get_time()
-
         self.display.on_update(time)
         self.player.on_update(time)
 
         self.score.text = "Score: %d\n" % self.player.score
         self.score.text += "Streak: %d" % self.player.streak
 
+        # get current gesture status and update the game logic
         self.gesture.on_update()
-
         touches = self.gesture.get_touch_states()
         for finger in range(4):
             touch = self.gesture.check_touch_for_finger(finger + 1)
@@ -169,12 +172,12 @@ class SongData(object):
             for line in f.readlines():
                 split = line.strip().split(",")
                 # self.solo.append((round(float(split[0])), self.solo[-1][1], False))
-                self.solo[-1].append(round(float(split[0])))
-                self.solo.append([round(float(split[0])), min(int(split[1]) - 1, 3)])
+                self.solo[-1].append(float(split[0]))
+                self.solo.append([float(split[0]), min(int(split[1]) - 1, 3)])
 
         # store bar lines as the time locations
         with open(bg_path) as f:
-            self.bg = [round(float(line.split(",")[0])) for line in f.readlines()]
+            self.bg = [float(line.split(",")[0]) for line in f.readlines()]
 
 
 # Displays and controls all game elements: Nowbar, Buttons, BarLines, Gems.
@@ -184,9 +187,9 @@ class BeatMatchDisplay(InstructionGroup):
     BARLINE_WIDTH = 2
     NOWBAR_WIDTH = 8
 
-    def __init__(self, gem_data):
+    def __init__(self, song_data):
         super(BeatMatchDisplay, self).__init__()
-        self.gem_data = gem_data
+        self.song_data = song_data
 
         WIDTH = Window.width
         HEIGHT = Window.height
@@ -203,13 +206,10 @@ class BeatMatchDisplay(InstructionGroup):
         offset = WIDTH / 8
         diff = (WIDTH - 2 * offset) / 3
 
-        # translate object
-        self.trans = Translate()
-
         # bar lines
         self.add(Color(1, 1, 1))
         self.lines = []
-        for bar in self.gem_data.bg:
+        for bar in self.song_data.bg:
             line = Line(
                 points=[0, bar * self.MEASURE, WIDTH, bar * self.MEASURE,],
                 width=self.BARLINE_WIDTH,
@@ -240,7 +240,7 @@ class BeatMatchDisplay(InstructionGroup):
         self.gems = []
         gem_width_half = 25
         gem_texture = None  # Image('texture.png').texture
-        for gem in self.gem_data.solo:
+        for gem in self.song_data.solo:
             if len(gem) < 3:
                 continue
             gem_obj = GemDisplay(
@@ -282,8 +282,8 @@ class BeatMatchDisplay(InstructionGroup):
         trans_y = -1 * time * self.MEASURE + self.NOW_BAR
 
         # update bar lines
-        for i in range(len(self.gem_data.bg)):
-            bar = self.gem_data.bg[i]
+        for i in range(len(self.song_data.bg)):
+            bar = self.song_data.bg[i]
 
             # compute line endpoint locations
             real_pt0 = (0, bar * self.MEASURE + trans_y)
@@ -297,7 +297,7 @@ class BeatMatchDisplay(InstructionGroup):
 
         # update gems
         gem_count = 0
-        for gem in self.gem_data.solo:
+        for gem in self.song_data.solo:
             if len(gem) < 3:
                 continue
 
@@ -343,9 +343,9 @@ class BeatMatchDisplay(InstructionGroup):
 # Handles game logic and keeps score.
 # Controls the display and the audio
 class Player(object):
-    def __init__(self, gem_data, display, audio_ctrl):
+    def __init__(self, song_data, display, audio_ctrl):
         super(Player, self).__init__()
-        self.gem_data = gem_data
+        self.song_data = song_data
         self.display = display
         self.audio_ctrl = audio_ctrl
 
@@ -359,24 +359,24 @@ class Player(object):
         hit = False
 
         # if solo hasn't ended
-        if self.gem_idx < len(self.gem_data.solo):
+        if self.gem_idx < len(self.song_data.solo):
 
             if (
-                self.gem_data.solo[self.gem_idx + 1][0] - SLOP
+                self.song_data.solo[self.gem_idx + 1][0] - SLOP
                 <= self.time
-                <= self.gem_data.solo[self.gem_idx + 1][2] + SLOP
+                <= self.song_data.solo[self.gem_idx + 1][2] + SLOP
             ):
                 self.gem_idx += 1
             # check if next gem is within slop window
             if (
-                self.gem_data.solo[self.gem_idx][0] - SLOP
+                self.song_data.solo[self.gem_idx][0] - SLOP
                 <= self.time
-                <= self.gem_data.solo[self.gem_idx][2] + SLOP
+                <= self.song_data.solo[self.gem_idx][2] + SLOP
             ):
-                # if abs(self.gem_data.solo[self.gem_idx][0] - self.time) <= SLOP:
+                # if abs(self.song_data.solo[self.gem_idx][0] - self.time) <= SLOP:
 
                 # if lane matches, then we have a hit
-                if self.gem_data.solo[self.gem_idx][1] == lane:
+                if self.song_data.solo[self.gem_idx][1] == lane:
                     self.display.gem_hit(self.gem_idx)
                     hit = True
                     self.score += 1
@@ -408,8 +408,8 @@ class Player(object):
 
         # if gems still exist, check for pass gems
         while (
-            self.gem_idx < len(self.gem_data.solo)
-            and self.gem_data.solo[self.gem_idx][2] < self.time - SLOP
+            self.gem_idx < len(self.song_data.solo)
+            and self.song_data.solo[self.gem_idx][2] < self.time - SLOP
         ):
             # only enter the loop if there are pass gems
             self.display.gem_pass(self.gem_idx)

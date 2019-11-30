@@ -24,6 +24,7 @@ from audio import AudioController
 from gesture import GestureWidget
 from graphics import FlexShip, GemDisplay
 from sounds import NoteCluster, NoteSequencer
+from pset7 import SongData
 
 
 class MainWidget(BaseWidget):
@@ -31,28 +32,35 @@ class MainWidget(BaseWidget):
 
         super(MainWidget, self).__init__()
 
+        # add background
         self.bg = Rectangle(
             source="./images/vaporwav.jpg", pos=self.pos, size=Window.size
         )
         self.canvas.add(self.bg)
 
-        data_manager = SongData()
-        gem_data, bar_data = data_manager.read_data(
-            "songs/annot_test.txt", "songs/annot_barlines.txt"
-        )
-
+        # load song data
+        # data_manager = SongData()
+        # gem_data, bar_data = data_manager.read_data(
+        #    "songs/annot_test.txt", "songs/annot_barlines.txt"
+        # )
+        self.data = SongData()
+        self.data.read_data("data/solo.csv", "data/beats.csv")
         self.audio = AudioController(
             ["songs/MoreThanAFeeling_solo.wav", "songs/MoreThanAFeeling_bg.wav",],
             use_miss_sound=False,
         )
-        self.display = BeatMatchDisplay(gem_data, bar_data)
-        self.player = Player(gem_data, self.display, self.audio)
+
+        # create game
+        self.display = BeatMatchDisplay(self.data)
+        self.player = Player(self.data, self.display, self.audio)
+        self.canvas.add(self.display)
 
         # add rockets to screen
         pos = (Window.width / 2, Window.height / 4)
         self.rocket = FlexShip(pos)
         self.canvas.add(self.rocket)
 
+        # add gesture widget
         kMargin = Window.width * 0.005
         kCursorAreaSize = (
             Window.width / 4 - 2 * kMargin,
@@ -62,19 +70,13 @@ class MainWidget(BaseWidget):
             Window.width - kCursorAreaSize[0] - kMargin,
             kMargin,
         )
-
         self.gesture = GestureWidget(
             cursor_area_pos=kCursorAreaPos,
             cursor_area_size=kCursorAreaSize,
             size_range=(1, 5),
             display_trailing_cursors=False,
         )
-
         self.canvas.add(self.gesture)
-        self.canvas.add(self.display)
-
-        self.touching = False
-        self.TOUCH = 10
 
         self.label = topleft_label()
         self.add_widget(self.label)
@@ -85,28 +87,32 @@ class MainWidget(BaseWidget):
             self.audio.toggle()
 
     def on_update(self):
-        axis = 0
-        thresh = 0.05
+        # use x-axis wrist angle
+        AXIS = 0
 
-        self.gesture.on_update()
-        wrist_angle = self.gesture.get_wrist_angle(axis)
-
-        # option 1: set absolute position
-        pos = wrist_angle / (np.pi / 2) * Window.width + (Window.width / 2)
-        self.rocket.set_position(pos, axis)
-
-        # option 2: move incrementally
-        # delta = wrist_angle * 10
-        # self.rocket.move_position(delta, axis)
-
-        self.label.text = ""
-        self.label.text += "\nScore: %.2f\n" % self.player.score
-        self.label.text += "Time: %.2f\n" % self.audio.get_time()
-
+        # update things based on current song time
         self.audio.on_update()
         time = self.audio.get_time()
         self.display.on_update(time)
         self.player.on_update(time)
+
+        # handle rocket movemement
+        self.gesture.on_update()
+        wrist_angle = self.gesture.get_wrist_angle(AXIS)
+
+        # option 1: set absolute position
+        pos = wrist_angle / (np.pi / 2) * Window.width + (Window.width / 2)
+        self.rocket.set_position(pos, AXIS)
+
+        # option 2: move incrementally
+        # delta = wrist_angle * 10
+        # self.rocket.move_position(delta, AXIS)
+
+        self.player.set_position(self.rocket.get_position())
+
+        self.label.text = ""
+        self.label.text += "\nScore: %.2f\n" % self.player.score
+        self.label.text += "Time: %.2f\n" % self.audio.get_time()
 
     def on_layout(self, window_size):
         # resize background
@@ -134,6 +140,7 @@ class MainWidget(BaseWidget):
         resize_topleft_label(self.label)
 
 
+"""
 # holds data for gems and barlines.
 class SongData(object):
     def __init__(self):
@@ -177,31 +184,26 @@ class SongData(object):
         barlines = bars_from_file(filepath_barline)
 
         return (gem_data, barlines)
+"""
 
 
 # Displays and controls all game elements: Nowbar, Buttons, BarLines, Gems.
 class BeatMatchDisplay(InstructionGroup):
-    def __init__(self, gem_data, bar_data):
-        super(BeatMatchDisplay, self).__init__()
-        self.time = 0
-        # barlines separate every n beats
-        # gems represent notes
-        # go through and fix them later\
+    NOW_BAR = Window.height * 0.25
 
-        self.gem_data = gem_data
-        self.bar_data = bar_data
+    def __init__(self, song_data):
+        super(BeatMatchDisplay, self).__init__()
+        self.song_data = song_data
+
+        print(song_data.solo)
+        print(song_data.bg)
         self.gems = []
 
-        # self.nowbar = NowBar()
-        # self.add(self.nowbar)
-
+        """
         self.trans = Translate()
         self.time_dist = 200
 
         self.now_y = 300
-        self.load_gems_bars()
-
-    def load_gems_bars(self):
         self.add(PushMatrix())
         self.add(self.trans)
 
@@ -221,6 +223,7 @@ class BeatMatchDisplay(InstructionGroup):
         self.add(PopMatrix())
 
         self.gem_to_remove = None
+        """
 
     def get_gem_y_loc(self, gem_idx):
         gem = self.gems[gem_idx]
@@ -239,23 +242,7 @@ class BeatMatchDisplay(InstructionGroup):
 
     # call every frame to handle animation needs
     def on_update(self, time):
-        # pass
-
-        # tracking time manually
-        # dt = self.kivyClock.frametime
-        self.time = time
-
-        self.trans.y = -time * self.time_dist
-
-        if self.gem_to_remove is not None:
-
-            if self.time > self.gem_to_remove[0] + 0.2:
-                self.remove(self.gem_to_remove[1])
-
-        # put ~gems appearing code~ here, according to the time
-        # potentially put this code into another
-
-        # call note off for synth stuff
+        pass
 
 
 # Handles game logic and keeps score.
@@ -318,13 +305,12 @@ class Player(object):
 
     # needed to check for pass gems (ie, went past the slop window)
     def on_update(self, time):
-        # print(self.display.get_gem_y_loc(self.current_idx))
-        if self.display.get_gem_y_loc(self.current_idx) < self.slop[1]:
-            self.display.gems[self.current_idx].on_pass()
-            print("passed gem")
-            self.current_idx += 1
-
         self.time = time
+
+    # tell the game logic the current position of the rocket
+    def set_position(self, pos):
+        pass
+        # find the current tile
 
 
 if __name__ == "__main__":
