@@ -43,3 +43,7 @@ class AudioController(object):
     # needed to update audio
     def on_update(self):
         self.audio.on_update()
+
+    # get the current song playback position in seconds
+    def get_time(self):
+        return self.bg.frame / Audio.sample_rate
