@@ -100,13 +100,23 @@ class MainWidget(BaseWidget):
         self.player.on_update(time)
 
         self.score.text = "Score: %d\n" % self.player.score
-        self.score.text += "Streak: %d" % self.player.streak
+        self.score.text += "Streak: %d\n" % self.player.streak
 
-        # get current gesture status and update the game logic
+        # get current gesture status
         self.gesture.on_update()
         touches = self.gesture.get_touch_states()
+        hand = self.gesture.get_hand()
+        self.score.text += "Hand: " + str(hand)
+
+        # update game logic depending on which hand is in use
         for finger in range(4):
-            touch = self.gesture.check_touch_for_finger(finger + 1)
+            touch = False
+
+            if hand == "left":
+                touch = self.gesture.check_touch_for_finger(4 - finger)
+            if hand == "right":
+                touch = self.gesture.check_touch_for_finger(finger + 1)
+
             if touch:
                 self.player.on_button_down(finger)
             # elif not touches[finger]:

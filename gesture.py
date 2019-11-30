@@ -143,9 +143,9 @@ class GestureWidget(InstructionGroup):
             for c in self.finger_cursors_1:
                 c.resize(cursor_area_pos, cursor_area_size)
 
+    # return all fingers that have just touched in this instant,
+    # or False if there are none
     def check_touch(self):
-        # return all fingers that have just touched in this instant,
-        # or False if there are none
         detected_fingers = []
         for f in range(1, self.NUM_FINGERS):
             if self.check_touch_for_finger(f):
@@ -155,9 +155,9 @@ class GestureWidget(InstructionGroup):
             return False
         return detected_fingers
 
+    # return (target_finger_touched, other_fingers_touched)
+    # e.g. (True, [1, 2, 4])
     def check_touch_with_preference(self, target_finger):
-        # return (target_finger_touched, other_fingers_touched)
-        # e.g. (True, [1, 2, 4])
         target_finger_touched = self.check_touch_for_finger(target_finger)
 
         other_fingers_touched = []
@@ -167,8 +167,8 @@ class GestureWidget(InstructionGroup):
 
         return (target_finger_touched, other_fingers_touched)
 
+    # check if a given finger has just touched at this moment
     def check_touch_for_finger(self, target_finger):
-        # check if a given finger has just touched at this moment
         assert target_finger > 0 and target_finger < self.NUM_FINGERS, target_finger
 
         DETECTION_DISTANCE_MIN = 40
@@ -196,18 +196,19 @@ class GestureWidget(InstructionGroup):
 
         return False
 
+    # return whether a finger is touched or not
     def get_touch_state(self, finger):
-        # return whether a finger is touched or not
         return self.touch_states[finger]
 
+    # return fingers touched
     def get_touch_states(self):
-        # return fingers touched
         return self.touch_states
 
+    # return whether any fingers are currently touched
     def get_any_touch_state(self):
-        # return whether any fingers are currently touched
         return any(self.touch_states)
 
+    # called by on_update
     def update_graphics(self, palm_pt_norm, finger_pts_norm):
         # set palm and fingertip positions
         if self.palm_cursor_1 is not None:
@@ -250,6 +251,18 @@ class GestureWidget(InstructionGroup):
         if vector_pm[2] == 0:
             return 0
         return np.arctan(vector_pm[axis] / -vector_pm[2])
+
+    # detect whether the left or right hand is in use
+    def get_hand(self):
+        index = self.finger_pts[0, 1]
+        pinky = self.finger_pts[0, 4]
+
+        # check x coordinate
+        if index[0] < pinky[0]:
+            return "right"
+        elif index[0] > pinky[0]:
+            return "left"
+        return None
 
 
 class MainWidget(BaseWidget):
