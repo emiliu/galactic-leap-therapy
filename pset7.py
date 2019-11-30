@@ -221,7 +221,7 @@ class BeatMatchDisplay(InstructionGroup):
         self.lines = []
         for bar in self.song_data.bg:
             line = Line(
-                points=[0, bar * self.MEASURE, WIDTH, bar * self.MEASURE,],
+                points=[0, bar * self.MEASURE, WIDTH, bar * self.MEASURE],
                 width=self.BARLINE_WIDTH,
             )
             self.lines.append(line)

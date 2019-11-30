@@ -22,7 +22,7 @@ import numpy as np
 
 from audio import AudioController
 from gesture import GestureWidget
-from graphics import FlexShip, GemDisplay
+from graphics import FlexShip, TileDisplay
 from sounds import NoteCluster, NoteSequencer
 from pset7 import SongData
 
@@ -46,7 +46,11 @@ class MainWidget(BaseWidget):
         self.data = SongData()
         self.data.read_data("data/solo.csv", "data/beats.csv")
         self.audio = AudioController(
-            ["songs/MoreThanAFeeling_solo.wav", "songs/MoreThanAFeeling_bg.wav",],
+            [
+                "data/YouGotAnotherThingComin_LD4.wav",
+                "data/YouGotAnotherThingComin_TRKS4.wav",
+            ],
+            # ["songs/MoreThanAFeeling_solo.wav", "songs/MoreThanAFeeling_bg.wav",],
             use_miss_sound=False,
         )
 
@@ -54,11 +58,6 @@ class MainWidget(BaseWidget):
         self.display = BeatMatchDisplay(self.data)
         self.player = Player(self.data, self.display, self.audio)
         self.canvas.add(self.display)
-
-        # add rockets to screen
-        pos = (Window.width / 2, Window.height / 4)
-        self.rocket = FlexShip(pos)
-        self.canvas.add(self.rocket)
 
         # add gesture widget
         kMargin = Window.width * 0.005
@@ -102,13 +101,11 @@ class MainWidget(BaseWidget):
 
         # option 1: set absolute position
         pos = wrist_angle / (np.pi / 2) * Window.width + (Window.width / 2)
-        self.rocket.set_position(pos, AXIS)
+        self.player.set_position(pos)
 
         # option 2: move incrementally
         # delta = wrist_angle * 10
-        # self.rocket.move_position(delta, AXIS)
-
-        self.player.set_position(self.rocket.get_position())
+        # self.player.move_position(delta)
 
         self.label.text = ""
         self.label.text += "\nScore: %.2f\n" % self.player.score
@@ -190,14 +187,97 @@ class SongData(object):
 # Displays and controls all game elements: Nowbar, Buttons, BarLines, Gems.
 class BeatMatchDisplay(InstructionGroup):
     NOW_BAR = Window.height * 0.25
+    BARLINE_WIDTH = 2
+    HEIGHT_PER_SECOND = Window.height * 0.2
+    TILES_PER_SECOND = 10
+    TILE_WIDTH = Window.width * 0.2
 
     def __init__(self, song_data):
         super(BeatMatchDisplay, self).__init__()
-        self.song_data = song_data
 
-        print(song_data.solo)
-        print(song_data.bg)
-        self.gems = []
+        self.song_data = song_data
+        song_solo_len = song_data.solo[-1][0]
+        song_bg_len = song_data.bg[-1]
+
+        # bar lines
+        self.add(Color(1, 1, 1))
+        self.lines = []
+        for bar in self.song_data.bg:
+            y = bar * self.HEIGHT_PER_SECOND + self.NOW_BAR
+            line = Line(points=[0, y, Window.width, y], width=self.BARLINE_WIDTH,)
+            self.lines.append(line)
+            self.add(line)
+
+        # "follow the path" tiles
+        n_tiles = 1 + round(max(song_solo_len, song_bg_len) * self.TILES_PER_SECOND)
+        self.tiles = np.zeros(n_tiles)
+        self.tile_has_note = np.full(n_tiles, False)
+
+        for gem in reversed(self.song_data.solo):
+            gem_time = gem[0]
+            gem_lane = gem[1]
+
+            # get closest tile to the note
+            tile_index = round(gem_time * self.TILES_PER_SECOND)
+
+            # get normalized x-position
+            norm_x = 0.1 + gem_lane * 0.2
+            self.tiles[tile_index] = norm_x
+            self.tile_has_note[tile_index] = True
+
+        # fill in tiles without notes by linear interpolation
+        zero_indices = self.tiles == 0
+        x = np.arange(len(self.tiles))
+        # self.tiles[zero_indices] = np.interp(
+        #    x[zero_indices],
+        #    x[~zero_indices],
+        #    self.tiles[~zero_indices],
+        # )
+        import scipy.interpolate
+
+        self.tiles[zero_indices] = scipy.interpolate.pchip_interpolate(
+            x[~zero_indices], self.tiles[~zero_indices], x[zero_indices],
+        )
+
+        # create the actual tile graphics
+        self.tile_display = []
+        for i in range(len(self.tiles)):
+            pos = (
+                self.tiles[i] * Window.width,
+                i / self.TILES_PER_SECOND * self.HEIGHT_PER_SECOND + self.NOW_BAR,
+            )
+            if self.tile_has_note[i]:
+                color = Color(1, 0, 0.5)
+            else:
+                color = Color(0, 0, 0.5)
+            if i > 0 and i < len(self.tiles) - 1:
+                # width_scale = 1 + 10 * np.abs(self.tiles[i+1] - self.tiles[i-1])
+                width_scale = 1 / np.cos(
+                    np.arctan(
+                        (self.tiles[i + 1] - self.tiles[i - 1])
+                        / (
+                            2
+                            * self.HEIGHT_PER_SECOND
+                            / self.TILES_PER_SECOND
+                            / Window.height
+                        )
+                    )
+                )
+            else:
+                width_scale = 1
+            td = TileDisplay(
+                pos,
+                color,
+                width_scale * self.TILE_WIDTH,
+                self.HEIGHT_PER_SECOND / self.TILES_PER_SECOND,
+            )
+            self.tile_display.append(td)
+            self.add(td)
+
+        # rocket
+        pos = (Window.width / 2, self.NOW_BAR)
+        self.rocket = FlexShip(pos)
+        self.add(self.rocket)
 
         """
         self.trans = Translate()
@@ -242,7 +322,29 @@ class BeatMatchDisplay(InstructionGroup):
 
     # call every frame to handle animation needs
     def on_update(self, time):
-        pass
+        trans_y = -1 * self.HEIGHT_PER_SECOND * time
+
+        # move bar lines
+        for i in range(len(self.song_data.bg)):
+            bar = self.song_data.bg[i]
+            y = bar * self.HEIGHT_PER_SECOND + self.NOW_BAR + trans_y
+            self.lines[i].points = [0, y, Window.width, y]
+
+        # move tiles
+        for i in range(len(self.tiles)):
+            pos = (
+                self.tiles[i] * Window.width,
+                i / self.TILES_PER_SECOND * self.HEIGHT_PER_SECOND
+                + self.NOW_BAR
+                + trans_y,
+            )
+            self.tile_display[i].set_position(pos)
+
+    def set_rocket_position(self, pos):
+        self.rocket.set_position(pos)
+
+    def move_rocket_position(self, delta):
+        self.rocket.move_position(delta)
 
 
 # Handles game logic and keeps score.
@@ -309,7 +411,12 @@ class Player(object):
 
     # tell the game logic the current position of the rocket
     def set_position(self, pos):
-        pass
+        self.display.set_rocket_position(pos)
+        # find the current tile
+
+    def move_position(self, delta):
+        self.display.move_rocket_position(delta)
+        pos = self.display.rocket.get_position()
         # find the current tile
 
 

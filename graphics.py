@@ -117,14 +117,14 @@ class FlexShip(InstructionGroup):
         self.flame.emitter_y = pos[1]
         self.flame.start()
 
-    def set_position(self, pos, axis):
+    def set_position(self, pos, axis=0):
         new_pos = np.array(self.shape.get_cpos())
         new_pos[axis] = pos
         self.shape.set_cpos(
             np.clip(new_pos, self.size / 2, Window.size - self.size / 2)
         )
 
-    def move_position(self, delta, axis):
+    def move_position(self, delta, axis=0):
         new_pos = np.array(self.shape.get_cpos())
         new_pos[axis] += delta
         self.shape.set_cpos(
@@ -236,6 +236,22 @@ class ButtonDisplay(InstructionGroup):
     def on_up(self):
         self.color.a = 1
         self.texture_color.a = 0
+
+
+class TileDisplay(InstructionGroup):
+    def __init__(self, pos, color, width, height):
+        super(TileDisplay, self).__init__()
+        self.pos = pos
+        self.color = color
+        self.width = width
+        self.height = height
+
+        self.rect = CRectangle(cpos=pos, csize=(width, height))
+        self.add(self.color)
+        self.add(self.rect)
+
+    def set_position(self, pos):
+        self.rect.set_cpos(pos)
 
 
 class MainWidget(BaseWidget):
