@@ -60,7 +60,7 @@ class MainWidget(BaseWidget):
         self.objects = AnimGroup()
 
         # add rockets to screen
-        pos = (Window.width / 2, 300)
+        pos = (Window.width / 2, Window.height / 4)
 
         self.rocket = FlexShip(pos)
         self.objects.add(self.rocket)
@@ -103,10 +103,15 @@ class MainWidget(BaseWidget):
         thresh = 0.05
 
         self.gesture.on_update()
+        wrist_angle = self.gesture.get_wrist_angle(axis)
 
-        dist = self.gesture.get_directionality(axis, thresh)
-        self.rocket.set_display(dist, axis)
-        # change to self.rocket.move_display() for alternate mode
+        # option 1: set absolute position
+        pos = wrist_angle / (np.pi / 2) * Window.width + (Window.width / 2)
+        self.rocket.set_position(pos, axis)
+
+        # option 2: move incrementally
+        # delta = wrist_angle * 10
+        # self.rocket.move_position(delta, axis)
 
         self.label.text = ""
         self.label.text += str(getLeapInfo())

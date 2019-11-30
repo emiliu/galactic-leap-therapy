@@ -111,8 +111,8 @@ class FlexShip(InstructionGroup):
     def __init__(self, pos):
         super(FlexShip, self).__init__()
 
-        self.size = (80, 80)
-        self.pos = pos
+        self.size = np.array([80, 80])
+        # self.pos = pos
         self.shape = CRectangle(
             csize=self.size, cpos=pos, segments=4, source="images/yellowship.png",
         )
@@ -120,34 +120,23 @@ class FlexShip(InstructionGroup):
         self.add(self.shape)
 
         self.flame = ParticleSystem("images/particle_flame/particle.pex")
-        self.flame.emitter_x = self.pos[0] - 50
-        self.flame.emitter_y = self.pos[1]
+        self.flame.emitter_x = pos[0] - 50
+        self.flame.emitter_y = pos[1]
         self.flame.start()
 
-    def move_display(self, inc, axis):
-        # move rocket increment along axis (x=0, y=1)
-        if axis == 0:
-            pos = (self.shape.pos[axis] + inc, self.shape.pos[1])
-        else:
-            pos = (self.shape.pos[0], self.shape.pos[axis] + inc)
+    def set_position(self, pos, axis):
+        new_pos = np.array(self.shape.get_cpos())
+        new_pos[axis] = pos
+        self.shape.set_cpos(
+            np.clip(new_pos, self.size / 2, Window.size - self.size / 2)
+        )
 
-        if pos[0] > 0 and pos[0] < Window.width - 100:
-            if pos[1] > 0 and pos[1] < Window.height - 100:
-
-                self.shape.pos = pos
-
-    def set_display(self, inc, axis):
-        if axis == 0:
-            new_pt = Window.width / 2 + inc * 50
-            pos = (new_pt, self.shape.pos[1])
-        else:
-            new_pt = Window.height / 2 + inc * 50
-            pos = (self.shape.pos[0], new_pt)
-
-        if pos[0] > 0 and pos[0] < Window.width - 100:
-            if pos[1] > 0 and pos[1] < Window.height - 100:
-
-                self.shape.pos = pos
+    def move_position(self, delta, axis):
+        new_pos = np.array(self.shape.get_cpos())
+        new_pos[axis] += delta
+        self.shape.set_cpos(
+            np.clip(new_pos, self.size / 2, Window.size - self.size / 2)
+        )
 
 
 class MainWidget(BaseWidget):
