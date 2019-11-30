@@ -2,14 +2,12 @@
 
 
 import sys
+import numpy as np
 
 # sys.path.append('..')
+
 from common.core import BaseWidget, run, lookup
-from common.audio import Audio
 from common.gfxutil import CEllipse, CRectangle, topleft_label
-from common.mixer import Mixer
-from common.wavegen import WaveGenerator
-from common.wavesrc import WaveBuffer, WaveFile, make_wave_buffers
 
 from kivy.core.window import Window
 from kivy.core.image import Image
@@ -17,9 +15,9 @@ from kivy.graphics.instructions import InstructionGroup
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.graphics import PushMatrix, PopMatrix, Translate
 
-import numpy as np
-
+from audio import AudioController
 from gesture import GestureWidget
+from graphics import ButtonDisplay, GemDisplay
 
 FRAME_RATE = 44100
 
@@ -44,11 +42,12 @@ class MainWidget(BaseWidget):
         self.beats = BeatMatchDisplay(self.data)
         self.canvas.add(self.beats)
         self.audio = AudioController(
-            (
+            [
                 "data/YouGotAnotherThingComin_LD4.wav",
                 "data/YouGotAnotherThingComin_TRKS4.wav",
                 "miss.wav",
-            )
+            ],
+            use_miss_sound=False,
         )
         self.player = Player(self.data, self.beats, self.audio)
 
@@ -133,45 +132,6 @@ class MainWidget(BaseWidget):
         """
 
 
-# creates the Audio driver
-# load solo and bg audio tracks
-# creates snippets for audio sound fx
-class AudioController(object):
-    def __init__(self, song_path):
-        super(AudioController, self).__init__()
-        self.audio = Audio(2)
-        self.mixer = Mixer()
-
-        self.solo = WaveGenerator(WaveFile(song_path[0]))
-        self.bg = WaveGenerator(WaveFile(song_path[1]))
-        self.miss_file = None  # WaveFile(song_path[2])
-
-        self.mixer.add(self.solo)
-        self.mixer.add(self.bg)
-        self.audio.set_generator(self.mixer)
-
-    # start / stop the song
-    def toggle(self):
-        self.solo.play_toggle()
-        self.bg.play_toggle()
-
-    # mute / unmute the solo track
-    def set_mute(self, mute):
-        if mute:
-            self.solo.set_gain(0.0)
-        else:
-            self.solo.set_gain(1.0)
-
-    # play a sound-fx (miss sound)
-    def play_sfx(self):
-        pass
-        # self.mixer.add(WaveGenerator(self.miss_file))
-
-    # needed to update audio
-    def on_update(self):
-        self.audio.on_update()
-
-
 # holds data for gems and barlines.
 class SongData(object):
     def __init__(self):
@@ -197,107 +157,6 @@ class SongData(object):
             self.bg = [
                 round(float(line.split(",")[0]) * FRAME_RATE) for line in f.readlines()
             ]
-
-
-class GemBarDisplay(InstructionGroup):
-    def __init__(self, pos, size, color=None):
-        super(GemBarDisplay, self).__init__()
-        self.color = color
-        self.add(self.color)
-        self.add(Rectangle(pos=pos, size=size))
-
-    # change to display this gem being hit
-    def on_hit(self):
-        self.color.rgb = (0.0824, 0.498, 0.1216)
-
-    # change to display a passed gem
-    def on_pass(self):
-        self.color.rgb = (0.1137, 0.149, 0.2314)
-
-    # useful if gem is to animate
-    def on_update(self, dt):
-        pass
-
-
-# display for a single gem at a position with a color (if desired)
-class GemDisplay(InstructionGroup):
-    SIZE = 50
-
-    def __init__(self, pos, color, texture=None):
-        super(GemDisplay, self).__init__()
-        self.texture = texture
-
-        # gem background
-        self.color = color
-        self.add(self.color)
-        self.ellipse1 = CEllipse(cpos=pos, csize=(self.SIZE, self.SIZE))
-        self.add(self.ellipse1)
-        # gem texture
-        if texture is not None:
-            self.add(Color(1, 1, 1))
-            self.ellipse2 = CEllipse(
-                cpos=pos, csize=(self.SIZE, self.SIZE), texture=texture
-            )
-            self.add(self.ellipse2)
-        else:
-            self.ellipse2 = None
-
-    def set_pos(self, pos):
-        self.ellipse1.set_cpos(pos)
-        if self.ellipse2 is not None:
-            self.ellipse2.set_cpos(pos)
-
-    def set_size_scale(self, scale):
-        self.ellipse1.set_csize((scale * self.SIZE, scale * self.SIZE))
-        if self.ellipse2 is not None:
-            self.ellipse2.set_csize((scale * self.SIZE, scale * self.SIZE))
-
-    # change to display this gem being hit
-    def on_hit(self):
-        self.color.rgb = (0.0824, 0.498, 0.1216)
-
-    # change to display a passed gem
-    def on_pass(self):
-        self.color.rgb = (0.1137, 0.149, 0.2314)
-
-    # useful if gem is to animate
-    def on_update(self, dt):
-        pass
-
-
-# Displays one button on the nowbar
-class ButtonDisplay(InstructionGroup):
-    def __init__(self, pos, color, texture):
-        super(ButtonDisplay, self).__init__()
-
-        self.color = color
-        self.add(self.color)
-        self.add(CEllipse(cpos=pos, csize=(50, 50)))
-
-        self.texture_color = Color(1, 1, 1, 1)
-        self.add(self.texture_color)
-        self.add(CEllipse(cpos=pos, csize=(50, 50), texture=texture))
-
-        # self.add(Color(1, 1, 1, 1))
-        # self.size = (40, 40)
-        # self.pos = pos
-        # self.shape = CRectangle(
-        #    csize=self.size, cpos=pos, segments=4, source="images/rocketship.png"
-        # )
-        # self.add(self.shape)
-
-    # displays when button is down (and if it hit a gem)
-    def on_down(self, hit):
-        pass
-        # if hit:
-        # self.texture_color.a = 1
-        # else:
-        # self.color.a = 0.8
-
-    # back to normal state
-    def on_up(self):
-        self.color.a = 1
-        self.texture_color.a = 0
 
 
 # Displays and controls all game elements: Nowbar, Buttons, BarLines, Gems.

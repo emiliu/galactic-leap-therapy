@@ -1,7 +1,4 @@
-from common.core import BaseWidget, run, lookup
-from common.kinect import Kinect
-from common.leap import getLeapInfo, getLeapFrame
-from common.kivyparticle import ParticleSystem
+import numpy as np
 
 from kivy.core.window import Window
 from kivy.core.image import Image
@@ -9,14 +6,10 @@ from kivy.uix.widget import Widget
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.graphics.instructions import InstructionGroup
 
-import numpy as np
-
 from common.audio import Audio
-from common.gfxutil import CRectangle
-from common.synth import Synth
-from common.note import NoteGenerator, Envelope
-from common.wavegen import WaveGenerator, SpeedModulator
-from common.wavesrc import WaveBuffer, WaveFile, make_wave_buffers
+from common.gfxutil import CRectangle, CEllipse
+from common.core import BaseWidget, run, lookup
+from common.kivyparticle import ParticleSystem
 
 
 class Rocket(InstructionGroup):
@@ -137,6 +130,107 @@ class FlexShip(InstructionGroup):
         self.shape.set_cpos(
             np.clip(new_pos, self.size / 2, Window.size - self.size / 2)
         )
+
+
+class GemBarDisplay(InstructionGroup):
+    def __init__(self, pos, size, color=None):
+        super(GemBarDisplay, self).__init__()
+        self.color = color
+        self.add(self.color)
+        self.add(Rectangle(pos=pos, size=size))
+
+    # change to display this gem being hit
+    def on_hit(self):
+        self.color.rgb = (0.0824, 0.498, 0.1216)
+
+    # change to display a passed gem
+    def on_pass(self):
+        self.color.rgb = (0.1137, 0.149, 0.2314)
+
+    # useful if gem is to animate
+    def on_update(self, dt):
+        pass
+
+
+# display for a single gem at a position with a color (if desired)
+class GemDisplay(InstructionGroup):
+    SIZE = 50
+
+    def __init__(self, pos, color, texture=None):
+        super(GemDisplay, self).__init__()
+        self.texture = texture
+
+        # gem background
+        self.color = color
+        self.add(self.color)
+        self.ellipse1 = CEllipse(cpos=pos, csize=(self.SIZE, self.SIZE))
+        self.add(self.ellipse1)
+        # gem texture
+        if texture is not None:
+            self.add(Color(1, 1, 1))
+            self.ellipse2 = CEllipse(
+                cpos=pos, csize=(self.SIZE, self.SIZE), texture=texture
+            )
+            self.add(self.ellipse2)
+        else:
+            self.ellipse2 = None
+
+    def set_pos(self, pos):
+        self.ellipse1.set_cpos(pos)
+        if self.ellipse2 is not None:
+            self.ellipse2.set_cpos(pos)
+
+    def set_size_scale(self, scale):
+        self.ellipse1.set_csize((scale * self.SIZE, scale * self.SIZE))
+        if self.ellipse2 is not None:
+            self.ellipse2.set_csize((scale * self.SIZE, scale * self.SIZE))
+
+    # change to display this gem being hit
+    def on_hit(self):
+        self.color.rgb = (0.0824, 0.498, 0.1216)
+
+    # change to display a passed gem
+    def on_pass(self):
+        self.color.rgb = (0.1137, 0.149, 0.2314)
+
+    # useful if gem is to animate
+    def on_update(self, dt):
+        pass
+
+
+# Displays one button on the nowbar
+class ButtonDisplay(InstructionGroup):
+    def __init__(self, pos, color, texture):
+        super(ButtonDisplay, self).__init__()
+
+        self.color = color
+        self.add(self.color)
+        self.add(CEllipse(cpos=pos, csize=(50, 50)))
+
+        self.texture_color = Color(1, 1, 1, 1)
+        self.add(self.texture_color)
+        self.add(CEllipse(cpos=pos, csize=(50, 50), texture=texture))
+
+        # self.add(Color(1, 1, 1, 1))
+        # self.size = (40, 40)
+        # self.pos = pos
+        # self.shape = CRectangle(
+        #    csize=self.size, cpos=pos, segments=4, source="images/rocketship.png"
+        # )
+        # self.add(self.shape)
+
+    # displays when button is down (and if it hit a gem)
+    def on_down(self, hit):
+        pass
+        # if hit:
+        # self.texture_color.a = 1
+        # else:
+        # self.color.a = 0.8
+
+    # back to normal state
+    def on_up(self):
+        self.color.a = 1
+        self.texture_color.a = 0
 
 
 class MainWidget(BaseWidget):
