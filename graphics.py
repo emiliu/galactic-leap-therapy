@@ -158,10 +158,11 @@ class GemDisplay(InstructionGroup):
 
     def __init__(self, pos, color, texture=None):
         super(GemDisplay, self).__init__()
+        self.pos = pos
+        self.color = color
         self.texture = texture
 
         # gem background
-        self.color = color
         self.add(self.color)
         self.ellipse1 = CEllipse(cpos=pos, csize=(self.SIZE, self.SIZE))
         self.add(self.ellipse1)
@@ -176,6 +177,7 @@ class GemDisplay(InstructionGroup):
             self.ellipse2 = None
 
     def set_pos(self, pos):
+        self.pos = pos
         self.ellipse1.set_cpos(pos)
         if self.ellipse2 is not None:
             self.ellipse2.set_cpos(pos)
