@@ -1,13 +1,12 @@
 # pset7.py
 
-
 import sys
 import numpy as np
 
 # sys.path.append('..')
 
 from common.core import BaseWidget, run, lookup
-from common.gfxutil import CEllipse, CRectangle, topleft_label
+from common.gfxutil import CEllipse, CRectangle, topleft_label, resize_topleft_label
 
 from kivy.core.window import Window
 from kivy.core.image import Image
@@ -19,9 +18,8 @@ from audio import AudioController
 from gesture import GestureWidget
 from graphics import ButtonDisplay, GemDisplay
 
-WIDTH = Window.width
-HEIGHT = Window.height
 
+# slop window in seconds
 SLOP = 0.1
 
 
@@ -37,8 +35,8 @@ class MainWidget(BaseWidget):
         self.data = SongData()
         self.data.read_data("data/solo.csv", "data/beats.csv")
 
-        self.beats = BeatMatchDisplay(self.data)
-        self.canvas.add(self.beats)
+        self.display = BeatMatchDisplay(self.data)
+        self.canvas.add(self.display)
         self.audio = AudioController(
             [
                 "data/YouGotAnotherThingComin_LD4.wav",
@@ -47,7 +45,7 @@ class MainWidget(BaseWidget):
             ],
             use_miss_sound=False,
         )
-        self.player = Player(self.data, self.beats, self.audio)
+        self.player = Player(self.data, self.display, self.audio)
 
         self.score = topleft_label()
         self.add_widget(self.score)
@@ -95,7 +93,7 @@ class MainWidget(BaseWidget):
         self.audio.on_update()
         time = self.audio.get_time()
 
-        self.beats.on_update(time)
+        self.display.on_update(time)
         self.player.on_update(time)
 
         self.score.text = "Score: %d\n" % self.player.score
@@ -130,6 +128,31 @@ class MainWidget(BaseWidget):
                 self.touching = False
         """
 
+    def on_layout(self, window_size):
+        # resize background
+        ASPECT = 16 / 9
+        width = max(Window.width, Window.height * ASPECT)
+        height = width / ASPECT
+        bg_size = np.array([width, height])
+        bg_pos = (np.array([Window.width, Window.height]) - bg_size) / 2
+        self.bg.pos = bg_pos
+        self.bg.size = bg_size
+
+        # resize gesture widget
+        kMargin = Window.width * 0.005
+        kCursorAreaSize = (
+            Window.width / 4 - 2 * kMargin,
+            Window.height / 4 - 2 * kMargin,
+        )
+        kCursorAreaPos = (
+            Window.width - kCursorAreaSize[0] - kMargin,
+            kMargin,
+        )
+        self.gesture.resize_display(kCursorAreaPos, kCursorAreaSize)
+
+        # resize label
+        resize_topleft_label(self.score)
+
 
 # holds data for gems and barlines.
 class SongData(object):
@@ -156,8 +179,8 @@ class SongData(object):
 
 # Displays and controls all game elements: Nowbar, Buttons, BarLines, Gems.
 class BeatMatchDisplay(InstructionGroup):
-    MEASURE = HEIGHT * 0.2
-    NOW_BAR = HEIGHT * 0.25
+    MEASURE = Window.height * 0.2
+    NOW_BAR = Window.height * 0.25
     BARLINE_WIDTH = 2
     NOWBAR_WIDTH = 8
 
@@ -217,7 +240,6 @@ class BeatMatchDisplay(InstructionGroup):
         self.gems = []
         gem_width_half = 25
         gem_texture = None  # Image('texture.png').texture
-        print(self.gem_data.solo[1])
         for gem in self.gem_data.solo:
             if len(gem) < 3:
                 continue
