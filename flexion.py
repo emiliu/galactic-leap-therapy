@@ -19,6 +19,7 @@ from kivy.graphics import PushMatrix, PopMatrix, Translate
 from kivy.graphics.instructions import InstructionGroup
 
 import numpy as np
+import scipy.interpolate
 
 from audio import AudioController
 from gesture import GestureWidget
@@ -108,8 +109,8 @@ class MainWidget(BaseWidget):
         # self.player.move_position(delta)
 
         self.label.text = ""
-        self.label.text += "\nScore: %.2f\n" % self.player.score
-        self.label.text += "Time: %.2f\n" % self.audio.get_time()
+        # self.label.text += "\nScore: %.2f\n" % self.player.score
+        self.label.text += "Time: %.2f\n" % time
 
     def on_layout(self, window_size):
         # resize background
@@ -225,16 +226,9 @@ class BeatMatchDisplay(InstructionGroup):
             self.tiles[tile_index] = norm_x
             self.tile_has_note[tile_index] = True
 
-        # fill in tiles without notes by linear interpolation
+        # smoothly fill in tiles without notes by cubic spline interpolation
         zero_indices = self.tiles == 0
         x = np.arange(len(self.tiles))
-        # self.tiles[zero_indices] = np.interp(
-        #    x[zero_indices],
-        #    x[~zero_indices],
-        #    self.tiles[~zero_indices],
-        # )
-        import scipy.interpolate
-
         self.tiles[zero_indices] = scipy.interpolate.pchip_interpolate(
             x[~zero_indices], self.tiles[~zero_indices], x[zero_indices],
         )
@@ -249,9 +243,11 @@ class BeatMatchDisplay(InstructionGroup):
             if self.tile_has_note[i]:
                 color = Color(1, 0, 0.5)
             else:
-                color = Color(0, 0, 0.5)
+                color = Color(0.4, 0.5, 0)
+
+            # depending on the "slope" of the path,
+            # widen the tiles to make it easier
             if i > 0 and i < len(self.tiles) - 1:
-                # width_scale = 1 + 10 * np.abs(self.tiles[i+1] - self.tiles[i-1])
                 width_scale = 1 / np.cos(
                     np.arctan(
                         (self.tiles[i + 1] - self.tiles[i - 1])
@@ -263,13 +259,16 @@ class BeatMatchDisplay(InstructionGroup):
                         )
                     )
                 )
+                # width_scale = 1 + 10 * np.abs(self.tiles[i+1] - self.tiles[i-1])
             else:
                 width_scale = 1
+
             td = TileDisplay(
                 pos,
                 color,
                 width_scale * self.TILE_WIDTH,
                 self.HEIGHT_PER_SECOND / self.TILES_PER_SECOND,
+                self.fake_3d,
             )
             self.tile_display.append(td)
             self.add(td)
@@ -279,47 +278,6 @@ class BeatMatchDisplay(InstructionGroup):
         self.rocket = FlexShip(pos)
         self.add(self.rocket)
 
-        """
-        self.trans = Translate()
-        self.time_dist = 200
-
-        self.now_y = 300
-        self.add(PushMatrix())
-        self.add(self.trans)
-
-        # for barline in self.bar_data:
-        # 	pos = (Window.width*.2, int(barline*self.time_dist+self.now_y))
-
-        # 	self.add(BarlineDisplay(pos = pos))
-        for gem in self.gem_data:
-            color = Color(hsv=(1, 1, 1))
-
-            x = np.interp((gem[1]), (1, 5), (200, Window.width - 200))
-            pos = (60 + x, int(gem[0] * self.time_dist + self.now_y))
-            gem = GemDisplay(pos=pos, color=color)
-            self.gems.append(gem)
-            self.add(gem)
-
-        self.add(PopMatrix())
-
-        self.gem_to_remove = None
-        """
-
-    def get_gem_y_loc(self, gem_idx):
-        gem = self.gems[gem_idx]
-
-        return gem.pos[1] - self.time * self.time_dist
-
-    # called by Player. Causes the right thing to happen
-    def gem_hit(self, gem_idx):
-        self.gems[gem_idx].on_hit()
-
-        self.gem_to_remove = (self.time, self.gems[gem_idx])
-
-    # called by Player. Causes the right thing to happen
-    def gem_pass(self, gem_idx):
-        self.gems[gem_idx].on_pass()
-
     # call every frame to handle animation needs
     def on_update(self, time):
         trans_y = -1 * self.HEIGHT_PER_SECOND * time
@@ -327,24 +285,65 @@ class BeatMatchDisplay(InstructionGroup):
         # move bar lines
         for i in range(len(self.song_data.bg)):
             bar = self.song_data.bg[i]
+
+            # compute line endpoint locations
             y = bar * self.HEIGHT_PER_SECOND + self.NOW_BAR + trans_y
-            self.lines[i].points = [0, y, Window.width, y]
+            real_pt0 = (0, y)
+            real_pt1 = (Window.width, y)
+            (fake_pt0, size_scale) = self.fake_3d(real_pt0)
+            (fake_pt1, size_scale) = self.fake_3d(real_pt1)
+            self.lines[i].points = [*fake_pt0, *fake_pt1]
+            self.lines[i].width = size_scale * self.BARLINE_WIDTH
 
         # move tiles
         for i in range(len(self.tiles)):
-            pos = (
-                self.tiles[i] * Window.width,
-                i / self.TILES_PER_SECOND * self.HEIGHT_PER_SECOND
-                + self.NOW_BAR
-                + trans_y,
+            pos = np.array(
+                [
+                    self.tiles[i] * Window.width,
+                    i / self.TILES_PER_SECOND * self.HEIGHT_PER_SECOND
+                    + self.NOW_BAR
+                    + trans_y,
+                ]
             )
-            self.tile_display[i].set_position(pos)
+            if pos[1] > -100 and pos[1] < Window.height + 1000:
+                self.tile_display[i].set_position(pos)
 
     def set_rocket_position(self, pos):
         self.rocket.set_position(pos)
 
     def move_rocket_position(self, delta):
         self.rocket.move_position(delta)
+
+    def get_tile(self, time):
+        index = round(time * self.TILES_PER_SECOND)
+        return (
+            self.tile_display[index].pos,
+            (self.tile_display[index].width, self.tile_display[index].height),
+        )
+
+    # apply a fake 3d effect to the given point
+    def fake_3d(self, pt):
+        (in_x, in_y) = pt
+
+        # point at "infinity"
+        # roughly center of screen
+        (c_x, c_y) = (Window.width / 2, Window.height * 0.425)
+
+        # compute the scaling constant
+        c = np.tan(self.NOW_BAR / c_y * (np.pi / 2)) / self.NOW_BAR
+
+        # scale y coordinate
+        out_y = np.arctan(in_y * c) / (np.pi / 2) * c_y
+
+        # x coordinate lies on intersection of out_y with
+        # the line from (in_x, self.NOW_BAR) to center of screen
+        m = (in_x - c_x) / (self.NOW_BAR - c_y)
+        out_x = c_x + m * (out_y - c_y)
+
+        # scaling factor for object size
+        size_scale = (out_y - c_y) / (self.NOW_BAR - c_y)
+
+        return ((out_x, out_y), size_scale)
 
 
 # Handles game logic and keeps score.
@@ -385,26 +384,6 @@ class Player(object):
         self.display.on_button_down(lane, hit)
     """
 
-    # returns True if gem hit, ow returns type of miss
-    def is_gem_hit(self, lane):
-        if (
-            self.display.get_gem_y_loc(self.current_idx) > self.slop[1]
-            and self.display.get_gem_y_loc(self.current_idx) < self.slop[0]
-        ):
-            print(self.gem_data[self.current_idx][1], lane + 1)
-            if self.gem_data[self.current_idx][1] == lane + 1:
-                self.display.gem_hit(self.current_idx)
-                self.current_idx += 1
-                print("gem hit")
-                self.score += 1
-                return True
-            else:
-
-                return "lane"
-        else:
-
-            return "temporal"
-
     # needed to check for pass gems (ie, went past the slop window)
     def on_update(self, time):
         self.time = time
@@ -412,12 +391,27 @@ class Player(object):
     # tell the game logic the current position of the rocket
     def set_position(self, pos):
         self.display.set_rocket_position(pos)
-        # find the current tile
+        self.check_path(pos)
 
     def move_position(self, delta):
         self.display.move_rocket_position(delta)
         pos = self.display.rocket.get_position()
-        # find the current tile
+        self.check_path(pos)
+
+    # check if the player is following the path or not
+    def check_path(self, player_pos):
+        # find the current tile and check distance to player
+        (t_pos, t_size) = self.display.get_tile(self.time)
+        x_dist = np.abs(player_pos - t_pos[0])
+
+        if x_dist < t_size[0] / 2:
+            # on the current tile
+            self.audio_ctrl.set_speed(1)
+        else:
+            # not on the current tile
+            # slow down the song smoothly
+            speed = 1 - np.arctan(5 * (x_dist - t_size[0] / 2) / Window.width)
+            self.audio_ctrl.set_speed(np.clip(speed, 0.2, 1))
 
 
 if __name__ == "__main__":

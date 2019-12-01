@@ -3,7 +3,7 @@ import numpy as np
 from kivy.core.window import Window
 from kivy.core.image import Image
 from kivy.uix.widget import Widget
-from kivy.graphics import Color, Ellipse, Line, Rectangle
+from kivy.graphics import Color, Ellipse, Line, Rectangle, Triangle
 from kivy.graphics.instructions import InstructionGroup
 
 from common.audio import Audio
@@ -239,19 +239,38 @@ class ButtonDisplay(InstructionGroup):
 
 
 class TileDisplay(InstructionGroup):
-    def __init__(self, pos, color, width, height):
+    def __init__(self, pos, color, width, height, transform_callback=None):
         super(TileDisplay, self).__init__()
-        self.pos = pos
+        self.pos = np.array(pos)
         self.color = color
         self.width = width
         self.height = height
+        self.transform = transform_callback
 
-        self.rect = CRectangle(cpos=pos, csize=(width, height))
+        # each tile is two triangles to form a rectangle
+        self.t0 = Triangle(points=[0, 0, 0, 0, 0, 0])
+        self.t1 = Triangle(points=[0, 0, 0, 0, 0, 0])
+        self.set_position(pos)
+
         self.add(self.color)
-        self.add(self.rect)
+        self.add(self.t0)
+        self.add(self.t1)
 
     def set_position(self, pos):
-        self.rect.set_cpos(pos)
+        pos = np.array(pos)
+        v0 = pos + (self.width / 2, self.height / 2)
+        v1 = pos + (-self.width / 2, self.height / 2)
+        v2 = pos + (-self.width / 2, -self.height / 2)
+        v3 = pos + (self.width / 2, -self.height / 2)
+
+        if self.transform is not None:
+            (v0, _) = self.transform(v0)
+            (v1, _) = self.transform(v1)
+            (v2, _) = self.transform(v2)
+            (v3, _) = self.transform(v3)
+
+        self.t0.points = [*v0, *v1, *v2]
+        self.t1.points = [*v0, *v2, *v3]
 
 
 class MainWidget(BaseWidget):

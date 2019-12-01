@@ -1,6 +1,6 @@
 from common.audio import Audio
 from common.mixer import Mixer
-from common.wavegen import WaveGenerator
+from common.wavegen import WaveGenerator, SpeedModulator
 from common.wavesrc import WaveBuffer, WaveFile, make_wave_buffers
 
 # creates the Audio driver
@@ -11,6 +11,7 @@ class AudioController(object):
         super(AudioController, self).__init__()
         self.audio = Audio(2)
         self.mixer = Mixer()
+        self.speed_mod = SpeedModulator(self.mixer)
 
         self.solo = WaveGenerator(WaveFile(song_path[0]))
         self.bg = WaveGenerator(WaveFile(song_path[1]))
@@ -21,7 +22,7 @@ class AudioController(object):
 
         self.mixer.add(self.solo)
         self.mixer.add(self.bg)
-        self.audio.set_generator(self.mixer)
+        self.audio.set_generator(self.speed_mod)
 
     # start / stop the song
     def toggle(self):
@@ -47,3 +48,7 @@ class AudioController(object):
     # get the current song playback position in seconds
     def get_time(self):
         return self.bg.frame / Audio.sample_rate
+
+    # change the playback speed
+    def set_speed(self, speed=1):
+        self.speed_mod.set_speed(speed)
