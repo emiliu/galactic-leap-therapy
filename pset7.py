@@ -75,7 +75,7 @@ class MainWidget(BaseWidget):
         # self.TOUCH = 10
 
         # self.audio.toggle()
-        self.opp = 0 #number of opp exc completed
+        self.opp = 0  # number of opp exc completed
 
     def on_key_down(self, keycode, modifiers):
         # play / pause toggle
@@ -253,7 +253,7 @@ class BeatMatchDisplay(InstructionGroup):
 
         # gems
         self.gems = []
-        #gem_width_half = Window.width / 50
+        # gem_width_half = Window.width / 50
         gem_texture = None  # Image('texture.png').texture
         for gem in self.song_data.solo:
             if len(gem) < 3:

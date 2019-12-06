@@ -49,8 +49,8 @@ class NoteRoads(InstructionGroup):
     def __init__(self, pos):
         super(NoteRoads, self).__init__()
         self.pos = pos
-        #self.radius = 10  # small dots
-        self.radius = Window.width / 40 # small dots
+        # self.radius = 10  # small dots
+        self.radius = Window.width / 40  # small dots
 
         self.shape = CRectangle(cpos=self.pos, csize=(self.radius, 3 * self.radius))
 
@@ -67,8 +67,8 @@ class Laser(InstructionGroup):
     def __init__(self, pos):
         super(Laser, self).__init__()
         self.pos = pos
-        #self.radius = 10  # small dots
-        self.radius = Window.width / 40 # small dots
+        # self.radius = 10  # small dots
+        self.radius = Window.width / 40  # small dots
         # self.color = Color(.5,.5,.5) #red
 
         self.shape = CEllipse(cpos=self.pos, csize=(self.radius, self.radius))
@@ -207,7 +207,6 @@ class GemDisplay(InstructionGroup):
 
 # Displays one button on the nowbar
 class ButtonDisplay(InstructionGroup):
-
     def __init__(self, pos, color, texture):
         super(ButtonDisplay, self).__init__()
 
