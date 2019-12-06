@@ -217,14 +217,15 @@ class BeatMatchDisplay(InstructionGroup):
         diff = (WIDTH - 2 * offset) / 3
 
         # bar lines
-        self.add(Color(1, 1, 1))
         self.lines = []
+        self.line_colors = []
         for bar in self.song_data.bg:
-            line = Line(
-                points=[0, bar * self.MEASURE, WIDTH, bar * self.MEASURE],
-                width=self.BARLINE_WIDTH,
-            )
+            y = bar * self.MEASURE
+            line = Line(points=[0, y, WIDTH, y], width=self.BARLINE_WIDTH,)
+            line_color = Color(1, 1, 1)
             self.lines.append(line)
+            self.line_colors.append(line_color)
+            self.add(line_color)
             self.add(line)
 
         # now bar
@@ -296,14 +297,19 @@ class BeatMatchDisplay(InstructionGroup):
             bar = self.song_data.bg[i]
 
             # compute line endpoint locations
-            real_pt0 = (0, bar * self.MEASURE + trans_y)
-            real_pt1 = (Window.width, bar * self.MEASURE + trans_y)
+            y = bar * self.MEASURE + trans_y
+            real_pt0 = (0, y)
+            real_pt1 = (Window.width, y)
             (fake_pt0, size_scale) = self.fake_3d(real_pt0)
             (fake_pt1, size_scale) = self.fake_3d(real_pt1)
 
             # set the new locations
             self.lines[i].points = [*fake_pt0, *fake_pt1]
             self.lines[i].width = size_scale * self.BARLINE_WIDTH
+
+            # set new color
+            yc = 1 - np.clip(0.5 * (y - self.NOW_BAR) / Window.height, 0, 0.75)
+            self.line_colors[i].rgb = (yc, yc, yc)
 
         # update gems
         gem_count = 0

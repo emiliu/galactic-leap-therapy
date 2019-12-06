@@ -243,6 +243,7 @@ class TileDisplay(InstructionGroup):
         super(TileDisplay, self).__init__()
         self.pos = np.array(pos)
         self.color = color
+        self.original_color = np.array(color.rgb)
         self.width = width
         self.height = height
         self.transform = transform_callback
@@ -271,6 +272,11 @@ class TileDisplay(InstructionGroup):
 
         self.t0.points = [*v0, *v1, *v2]
         self.t1.points = [*v0, *v2, *v3]
+
+    def on_update(self):
+        y = self.t0.points[1]
+        c_scale = 1 - np.clip(y / Window.height, 0, 1)
+        self.color.rgb = c_scale * self.original_color
 
 
 class MainWidget(BaseWidget):

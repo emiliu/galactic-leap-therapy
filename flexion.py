@@ -190,8 +190,8 @@ class BeatMatchDisplay(InstructionGroup):
     NOW_BAR = Window.height * 0.25
     BARLINE_WIDTH = 2
     HEIGHT_PER_SECOND = Window.height * 0.2
-    TILES_PER_SECOND = 10
-    TILE_WIDTH = Window.width * 0.2
+    TILES_PER_SECOND = 5
+    TILE_WIDTH = Window.width * 0.25
 
     def __init__(self, song_data):
         super(BeatMatchDisplay, self).__init__()
@@ -201,12 +201,15 @@ class BeatMatchDisplay(InstructionGroup):
         song_bg_len = song_data.bg[-1]
 
         # bar lines
-        self.add(Color(1, 1, 1))
         self.lines = []
+        self.line_colors = []
         for bar in self.song_data.bg:
             y = bar * self.HEIGHT_PER_SECOND + self.NOW_BAR
             line = Line(points=[0, y, Window.width, y], width=self.BARLINE_WIDTH,)
+            line_color = Color(1, 1, 1)
             self.lines.append(line)
+            self.line_colors.append(line_color)
+            self.add(line_color)
             self.add(line)
 
         # "follow the path" tiles
@@ -243,7 +246,7 @@ class BeatMatchDisplay(InstructionGroup):
             if self.tile_has_note[i]:
                 color = Color(1, 0, 0.5)
             else:
-                color = Color(0.4, 0.5, 0)
+                color = Color(0.20, 0.93, 0.48)
 
             # depending on the "slope" of the path,
             # widen the tiles to make it easier
@@ -292,8 +295,14 @@ class BeatMatchDisplay(InstructionGroup):
             real_pt1 = (Window.width, y)
             (fake_pt0, size_scale) = self.fake_3d(real_pt0)
             (fake_pt1, size_scale) = self.fake_3d(real_pt1)
+
+            # set the new locations
             self.lines[i].points = [*fake_pt0, *fake_pt1]
             self.lines[i].width = size_scale * self.BARLINE_WIDTH
+
+            # set new color
+            yc = 1 - np.clip(0.5 * (y - self.NOW_BAR) / Window.height, 0, 0.75)
+            self.line_colors[i].rgb = (yc, yc, yc)
 
         # move tiles
         for i in range(len(self.tiles)):
@@ -305,8 +314,9 @@ class BeatMatchDisplay(InstructionGroup):
                     + trans_y,
                 ]
             )
-            if pos[1] > -100 and pos[1] < Window.height + 1000:
+            if pos[1] > -0.1 * Window.height and pos[1] < 5 * Window.height:
                 self.tile_display[i].set_position(pos)
+            self.tile_display[i].on_update()
 
     def set_rocket_position(self, pos):
         self.rocket.set_position(pos)
