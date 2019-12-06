@@ -249,7 +249,7 @@ class BeatMatchDisplay(InstructionGroup):
         # gems
         self.gems = []
         #gem_width_half = Window.width / 50
-        gem_texture = None  # Image('texture.png').texture
+        gem_texture = Image('images/asteroid.png').texture
         for gem in self.song_data.solo:
             if len(gem) < 3:
                 continue
