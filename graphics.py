@@ -49,7 +49,8 @@ class NoteRoads(InstructionGroup):
     def __init__(self, pos):
         super(NoteRoads, self).__init__()
         self.pos = pos
-        self.radius = 10  # small dots
+        #self.radius = 10  # small dots
+        self.radius = Window.width / 40 # small dots
 
         self.shape = CRectangle(cpos=self.pos, csize=(self.radius, 3 * self.radius))
 
@@ -66,7 +67,8 @@ class Laser(InstructionGroup):
     def __init__(self, pos):
         super(Laser, self).__init__()
         self.pos = pos
-        self.radius = 10  # small dots
+        #self.radius = 10  # small dots
+        self.radius = Window.width / 40 # small dots
         # self.color = Color(.5,.5,.5) #red
 
         self.shape = CEllipse(cpos=self.pos, csize=(self.radius, self.radius))
@@ -157,7 +159,7 @@ class GemBarDisplay(InstructionGroup):
 
 # display for a single gem at a position with a color (if desired)
 class GemDisplay(InstructionGroup):
-    SIZE = 50
+    SIZE = Window.width / 18
 
     def __init__(self, pos, color, texture=None):
         super(GemDisplay, self).__init__()
@@ -205,16 +207,19 @@ class GemDisplay(InstructionGroup):
 
 # Displays one button on the nowbar
 class ButtonDisplay(InstructionGroup):
+
     def __init__(self, pos, color, texture):
         super(ButtonDisplay, self).__init__()
 
+        SIZE = Window.width / 18
+
         self.color = color
         self.add(self.color)
-        self.add(CEllipse(cpos=pos, csize=(50, 50)))
+        self.add(CEllipse(cpos=pos, csize=(SIZE, SIZE)))
 
         self.texture_color = Color(1, 1, 1, 1)
         self.add(self.texture_color)
-        self.add(CEllipse(cpos=pos, csize=(50, 50), texture=texture))
+        self.add(CEllipse(cpos=pos, csize=(SIZE, SIZE), texture=texture))
 
         # self.add(Color(1, 1, 1, 1))
         # self.size = (40, 40)
