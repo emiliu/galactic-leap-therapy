@@ -1,12 +1,14 @@
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.graphics import Rectangle
+from kivy.graphics import Color, Rectangle
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
 from kivy.uix.togglebutton import ToggleButton
+from common.gfxutil import CLabelRect, topleft_label
+
 
 import sys
 import numpy as np
@@ -27,13 +29,21 @@ class MenuScreen(Screen):
         self.window_size = (0, 0)
         self.scale_bg()
         self.canvas.add(self.bg)
+
         Clock.schedule_interval(self.scale_bg, 0)
-
-        self.score = topleft_label()
-        self.add_widget(self.score)
-
+        
+        self.score = CLabelRect(pos = (self.window_size[0]/10, self.window_size[1]))
         self.opposition = 0
         self.flexion = 0
+
+        # label_layout = AnchorLayout(size_hint=(1,1))
+
+        self.score.label.text = "Opposition Completed: %d\n" % self.opposition
+        self.score.label.text += "Flexion Completed: %d\n" % self.flexion
+        
+        self.canvas.add(self.score)
+ 
+
 
         toggle_layout = BoxLayout(
             orientation="horizontal",
@@ -54,6 +64,7 @@ class MenuScreen(Screen):
         toggle_layout.add_widget(self.flex_btn)
         self.add_widget(toggle_layout)
         self.add_widget(start_btn)
+        
 
     def change_screen(self, btn):
         if self.opp_btn.state == "down":
