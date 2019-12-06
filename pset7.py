@@ -7,12 +7,15 @@ import numpy as np
 
 from common.core import BaseWidget, run, lookup
 from common.gfxutil import CEllipse, CRectangle, topleft_label, resize_topleft_label
+from common.kivyparticle import ParticleSystem
 
+from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.core.image import Image
 from kivy.graphics.instructions import InstructionGroup
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.graphics import PushMatrix, PopMatrix, Translate
+from kivy.uix.widget import Widget
 
 from audio import AudioController
 from gesture import GestureWidget
@@ -46,8 +49,9 @@ class MainWidget(BaseWidget):
         )
 
         # create game
+        self.explosions = ExplosionsWidget(size=Window.size)
         self.display = BeatMatchDisplay(self.data)
-        self.player = Player(self.data, self.display, self.audio)
+        self.player = Player(self.data, self.display, self.audio, self.explosions)
         self.canvas.add(self.display)
 
         self.score = topleft_label()
@@ -75,6 +79,8 @@ class MainWidget(BaseWidget):
         # self.TOUCH = 10
 
         # self.audio.toggle()
+
+        self.add_widget(self.explosions)
 
     def on_key_down(self, keycode, modifiers):
         # play / pause toggle
@@ -167,6 +173,23 @@ class MainWidget(BaseWidget):
         resize_topleft_label(self.score)
 
 
+class ExplosionsWidget(Widget):
+    def __init__(self, *args, **kwargs):
+        super(ExplosionsWidget, self).__init__()
+
+    def add_explosion(self, pos, duration):
+        #Explosion(pos, duration)
+        ps = ParticleSystem('images/particle_flame/particle.pex')
+        ps.emitter_x = pos[0]
+        ps.emitter_y = pos[1]
+        ps.start()
+        self.add_widget(ps)
+        Clock.schedule_once(self.stop_explosion, duration)
+
+    def stop_explosion(self, ps):
+        ps.stop()
+        self.remove_widget(ps)
+
 # holds data for gems and barlines.
 class SongData(object):
     def __init__(self):
@@ -213,8 +236,8 @@ class BeatMatchDisplay(InstructionGroup):
             (0.380, 0.110, 0.208),
         )
 
-        offset = WIDTH / 8
-        diff = (WIDTH - 2 * offset) / 3
+        self.offset = WIDTH / 8
+        self.diff = (WIDTH - 2 * self.offset) / 3
 
         # bar lines
         self.add(Color(1, 1, 1))
@@ -239,7 +262,7 @@ class BeatMatchDisplay(InstructionGroup):
         btn_texture = Image("images/yellowship.png").texture
         for i in range(4):
             button = ButtonDisplay(
-                (i * diff + offset, self.NOW_BAR),
+                (i * self.diff + self.offset, self.NOW_BAR),
                 Color(*self.colors[i]),
                 texture=btn_texture,
             )
@@ -254,7 +277,7 @@ class BeatMatchDisplay(InstructionGroup):
             if len(gem) < 3:
                 continue
             gem_obj = GemDisplay(
-                (gem[1] * diff + offset, gem[0] * self.MEASURE),
+                (gem[1] * self.diff + self.offset, gem[0] * self.MEASURE),
                 Color(*self.colors[gem[1]]),
                 texture=gem_texture,
             )
@@ -353,11 +376,12 @@ class BeatMatchDisplay(InstructionGroup):
 # Handles game logic and keeps score.
 # Controls the display and the audio
 class Player(object):
-    def __init__(self, song_data, display, audio_ctrl):
+    def __init__(self, song_data, display, audio_ctrl, explosions):
         super(Player, self).__init__()
         self.song_data = song_data
         self.display = display
         self.audio_ctrl = audio_ctrl
+        self.explosions = explosions
 
         self.time = 0
         self.gem_idx = 0
@@ -388,6 +412,10 @@ class Player(object):
                 # if lane matches, then we have a hit
                 if self.song_data.solo[self.gem_idx][1] == lane:
                     self.display.gem_hit(self.gem_idx)
+                    pos = (lane * self.display.diff + self.display.offset,
+                           self.display.NOW_BAR - Window.width / 20)
+                    #self.display.NOW_BAR
+                    self.explosions.add_explosion(pos, 100)
                     hit = True
                     self.score += 1
                     self.streak += 1

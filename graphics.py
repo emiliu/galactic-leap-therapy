@@ -1,5 +1,6 @@
 import numpy as np
 
+from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.core.image import Image
 from kivy.uix.widget import Widget
