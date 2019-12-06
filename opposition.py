@@ -121,6 +121,9 @@ class MainWidget(BaseWidget):
         self.touching = False
         self.TOUCH = 10
 
+
+        self.opposition = 0
+
         self.label = topleft_label()
         self.add_widget(self.label)
 
@@ -134,6 +137,8 @@ class MainWidget(BaseWidget):
             if not self.touching:
                 self.notes.noteon(self.TOUCH)
                 self.touching = True
+
+                self.opposition += 1 #keeps track of total number of exc 
         else:
             if self.touching:
                 self.notes.noteoff(self.TOUCH)
