@@ -29,6 +29,12 @@ class MenuScreen(Screen):
         self.canvas.add(self.bg)
         Clock.schedule_interval(self.scale_bg, 0)
 
+        self.score = topleft_label()
+        self.add_widget(self.score)
+
+        self.opposition = 0
+        self.flexion = 0
+
         toggle_layout = BoxLayout(
             orientation="horizontal",
             size_hint=(0.5, 0.1),
@@ -74,8 +80,11 @@ class GameScreen(Screen):
     def __init__(self, switch_screen_callback):
         super(GameScreen, self).__init__()
 
+        self.opposition = 0
+
         self.switch_screen = switch_screen_callback
         self.game_widget = None
+        self.type = None
 
         self.exit_btn = Button(text="exit", size_hint=(0.1, 0.1), pos=(0, 0))
         self.exit_btn.bind(on_release=self.exit_game)
@@ -89,6 +98,7 @@ class GameScreen(Screen):
         else:
             raise Exception("No such game")
         self.add_widget(self.game_widget, index=2)
+        self.type = game
 
     def exit_game(self, btn):
         # not the recommended way of unscheduling
@@ -100,6 +110,10 @@ class GameScreen(Screen):
         # keeping this here in case we decide that's necessary
         # for t in g_terminate_funcs:
         # t()
+
+        if self.type == "opp":
+            self.opposition += self.game_widget.opp
+            print("new score", self.opposition)
 
         self.remove_widget(self.game_widget)
         self.switch_screen("menu")

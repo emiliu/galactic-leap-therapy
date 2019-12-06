@@ -172,7 +172,7 @@ class GestureWidget(InstructionGroup):
         assert target_finger > 0 and target_finger < self.NUM_FINGERS, target_finger
 
         DETECTION_DISTANCE_MIN = 40
-        DETECTION_DISTANCE_MAX = 45
+        DETECTION_DISTANCE_MAX = 60
 
         # logic to detect a touch or a release
         touched = False

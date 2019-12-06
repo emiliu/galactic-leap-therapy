@@ -75,6 +75,7 @@ class MainWidget(BaseWidget):
         # self.TOUCH = 10
 
         # self.audio.toggle()
+        self.opp = 0 #number of opp exc completed
 
     def on_key_down(self, keycode, modifiers):
         # play / pause toggle
@@ -121,6 +122,9 @@ class MainWidget(BaseWidget):
                 self.player.on_button_down(finger)
             # elif not touches[finger]:
             # elf.player.on_button_up(finger)
+
+        if any(touches):
+            self.opp += 1
 
         """
         self.gesture.check_touch()
