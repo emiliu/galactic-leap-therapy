@@ -109,9 +109,10 @@ class FlexShip(InstructionGroup):
         self.size = np.array([80, 80])
         # self.pos = pos
         self.shape = CRectangle(
-            csize=self.size, cpos=pos, segments=4, source="images/yellowship.png",
+            csize=self.size, cpos=pos, segments=4, source="images/ufo.png",
         )
 
+        self.add(Color(1, 1, 1))
         self.add(self.shape)
 
         self.flame = ParticleSystem("images/particle_flame/particle.pex")
