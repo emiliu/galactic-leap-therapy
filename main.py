@@ -31,8 +31,8 @@ class MenuScreen(Screen):
         self.canvas.add(self.bg)
 
         Clock.schedule_interval(self.scale_bg, 0)
-        
-        self.score = CLabelRect(pos = (self.window_size[0]/10, self.window_size[1]))
+
+        self.score = CLabelRect(pos=(self.window_size[0] / 10, self.window_size[1]))
         self.opposition = 0
         self.flexion = 0
 
@@ -40,10 +40,8 @@ class MenuScreen(Screen):
 
         self.score.label.text = "Opposition Completed: %d\n" % self.opposition
         self.score.label.text += "Flexion Completed: %d\n" % self.flexion
-        
-        self.canvas.add(self.score)
- 
 
+        self.canvas.add(self.score)
 
         toggle_layout = BoxLayout(
             orientation="horizontal",
@@ -64,7 +62,6 @@ class MenuScreen(Screen):
         toggle_layout.add_widget(self.flex_btn)
         self.add_widget(toggle_layout)
         self.add_widget(start_btn)
-        
 
     def change_screen(self, btn):
         if self.opp_btn.state == "down":

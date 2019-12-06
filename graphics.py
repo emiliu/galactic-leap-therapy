@@ -167,12 +167,12 @@ class GemDisplay(InstructionGroup):
         super(GemDisplay, self).__init__()
         self.pos = pos
         self.color = color
-        #self.texture = texture
+        # self.texture = texture
 
         # gem background
-        #self.add(self.color)
+        # self.add(self.color)
         self.ellipse1 = CEllipse(cpos=pos, csize=(self.SIZE, self.SIZE))
-        #self.add(self.ellipse1)
+        # self.add(self.ellipse1)
         # gem texture
         if texture is not None:
             self.add(Color(1, 1, 1, 1))
@@ -215,8 +215,8 @@ class ButtonDisplay(InstructionGroup):
         SIZE = Window.width / 18
 
         self.color = color
-        #self.add(self.color)
-        #self.add(CEllipse(cpos=pos, csize=(SIZE, SIZE)))
+        # self.add(self.color)
+        # self.add(CEllipse(cpos=pos, csize=(SIZE, SIZE)))
 
         self.texture_color = Color(1, 1, 1, 1)
         self.add(self.texture_color)

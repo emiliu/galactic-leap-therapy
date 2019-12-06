@@ -182,8 +182,8 @@ class ExplosionsWidget(Widget):
         super(ExplosionsWidget, self).__init__()
 
     def add_explosion(self, pos, duration):
-        #Explosion(pos, duration)
-        ps = ParticleSystem('images/particle_flame/particle.pex')
+        # Explosion(pos, duration)
+        ps = ParticleSystem("images/particle_flame/particle.pex")
         ps.emitter_x = pos[0]
         ps.emitter_y = pos[1]
         ps.start()
@@ -193,6 +193,7 @@ class ExplosionsWidget(Widget):
     def stop_explosion(self, ps):
         ps.stop()
         self.remove_widget(ps)
+
 
 # holds data for gems and barlines.
 class SongData(object):
@@ -276,8 +277,8 @@ class BeatMatchDisplay(InstructionGroup):
 
         # gems
         self.gems = []
-        #gem_width_half = Window.width / 50
-        gem_texture = Image('images/asteroid.png').texture
+        # gem_width_half = Window.width / 50
+        gem_texture = Image("images/asteroid.png").texture
         for gem in self.song_data.solo:
             if len(gem) < 3:
                 continue
@@ -422,9 +423,11 @@ class Player(object):
                 # if lane matches, then we have a hit
                 if self.song_data.solo[self.gem_idx][1] == lane:
                     self.display.gem_hit(self.gem_idx)
-                    pos = (lane * self.display.diff + self.display.offset,
-                           self.display.NOW_BAR - Window.width / 20)
-                    #self.display.NOW_BAR
+                    pos = (
+                        lane * self.display.diff + self.display.offset,
+                        self.display.NOW_BAR - Window.width / 20,
+                    )
+                    # self.display.NOW_BAR
                     self.explosions.add_explosion(pos, 100)
                     hit = True
                     self.score += 1
