@@ -14,7 +14,7 @@ import sys
 import numpy as np
 
 from flexion import MainWidget as FlexWidget
-from pset7 import MainWidget as OppWidget
+from opposition import MainWidget as OppWidget
 
 # from common.core import g_terminate_funcs
 

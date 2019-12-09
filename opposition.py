@@ -1,106 +1,63 @@
-from common.core import BaseWidget, run, lookup
-from common.gfxutil import (
-    topleft_label,
-    resize_topleft_label,
-    Cursor3D,
-    AnimGroup,
-    KFAnim,
-    scale_point,
-    CEllipse,
-    CRectangle,
-)
-from common.kinect import Kinect
-from common.leap import getLeapInfo, getLeapFrame
-from common.kivyparticle import ParticleSystem
+# pset7.py
 
-from kivy.core.window import Window
-from kivy.core.image import Image
-from kivy.uix.widget import Widget
-from kivy.graphics import Color, Ellipse, Line, Rectangle
-from kivy.graphics.instructions import InstructionGroup
-
+import sys
 import numpy as np
 
-from common.audio import Audio
-from common.synth import Synth
-from common.note import NoteGenerator, Envelope
-from common.wavegen import WaveGenerator, SpeedModulator
-from common.wavesrc import WaveBuffer, WaveFile, make_wave_buffers
+# sys.path.append('..')
 
+from common.core import BaseWidget, run, lookup
+from common.gfxutil import CEllipse, CRectangle, topleft_label, resize_topleft_label
+from common.kivyparticle import ParticleSystem
+
+from kivy.clock import Clock
+from kivy.core.window import Window
+from kivy.core.image import Image
+from kivy.graphics.instructions import InstructionGroup
+from kivy.graphics import Color, Ellipse, Line, Rectangle
+from kivy.graphics import PushMatrix, PopMatrix, Translate
+from kivy.uix.widget import Widget
+
+from audio import AudioController
 from gesture import GestureWidget
-from graphics import Rocket, NoteRoads, Laser
-from sounds import NoteCluster, NoteSequencer
+from graphics import ButtonDisplay, GemDisplay
 
 
-SF_PATH = "data/FluidR3_GM.sf2"
+# slop window in seconds
+SLOP = 0.1
 
 
 class MainWidget(BaseWidget):
     def __init__(self):
         super(MainWidget, self).__init__()
 
+        # add background
         self.bg = Rectangle(
-            source="./images/vzmpv432havx.jpg", pos=self.pos, size=Window.size
+            source="images/vzmpv432havx.jpg", pos=self.pos, size=Window.size
         )
         self.canvas.add(self.bg)
 
-        self.audio = Audio(2)
-        self.synth = Synth(SF_PATH)
-        self.audio.set_generator(self.synth)
-
-        self.notes = NoteSequencer(
-            self.synth,
+        # load song data
+        self.data = SongData()
+        self.data.read_data("data/solo.csv", "data/beats.csv")
+        self.audio = AudioController(
             [
-                69,
-                72,
-                76,
-                81,
-                [83, 68],
-                76,
-                72,
-                83,
-                [84, 67],
-                76,
-                72,
-                84,
-                [78, 66],
-                74,
-                69,
-                74,
-                [76, 65],
-                72,
-                69,
-                72,
-                [76, 65],
-                72,
-                69,
-                [71, 50],
-                [72, 45],
-                [72, 45],
+                "data/YouGotAnotherThingComin_LD4.wav",
+                "data/YouGotAnotherThingComin_TRKS4.wav",
+                "miss.wav",
             ],
+            use_miss_sound=False,
         )
 
-        self.objects = AnimGroup()
+        # create game
+        self.explosions = ExplosionsWidget(size=Window.size)
+        self.display = BeatMatchDisplay(self.data)
+        self.player = Player(self.data, self.display, self.audio, self.explosions)
+        self.canvas.add(self.display)
 
-        # add rockets to screen
-        self.rockets = []
-        num_inter = 4
-        for i in range(num_inter):
-            x = 200  # near left edge of screen
-            y = np.interp((i), (0, num_inter), (200, int(Window.height * 0.8)))
+        self.score = topleft_label()
+        self.add_widget(self.score)
 
-            hue = np.interp((i), (0, num_inter), (0, 255))
-            color = (hue, 0.5, 0.5)
-            pos = (x, y)
-
-            rocket = Rocket(
-                pos, (200, 100), color, self.add_widget
-            )  # add_widget is the callback
-            self.rockets.append(rocket)  # index corresponds to finger gesture
-            self.objects.add(rocket)
-
-        self.canvas.add(self.objects)
-
+        # add gesture widget
         kMargin = Window.width * 0.005
         kCursorAreaSize = (
             Window.width / 4 - 2 * kMargin,
@@ -118,38 +75,86 @@ class MainWidget(BaseWidget):
         )
         self.canvas.add(self.gesture)
 
-        self.touching = False
-        self.TOUCH = 10
+        # self.touching = False
+        # self.TOUCH = 10
 
-        self.opposition = 0
+        # self.audio.toggle()
+        self.opp = 0  # number of opp exc completed
 
-        self.label = topleft_label()
-        self.add_widget(self.label)
+        self.add_widget(self.explosions)
+
+    def on_key_down(self, keycode, modifiers):
+        # play / pause toggle
+        if keycode[1] == "p":
+            self.audio.toggle()
+
+        # button down
+        button_idx = lookup(keycode[1], "12345", (0, 1, 2, 3, 4))
+        if button_idx is not None:
+            self.player.on_button_down(button_idx)
+
+    def on_key_up(self, keycode):
+        # button up
+        button_idx = lookup(keycode[1], "12345", (0, 1, 2, 3, 4))
+        if button_idx is not None:
+            self.player.on_button_up(button_idx)
 
     def on_update(self):
+        # update game based on audio time
         self.audio.on_update()
+        time = self.audio.get_time()
+        self.display.on_update(time)
+        self.player.on_update(time)
+
+        self.score.text = "Score: %d\n" % self.player.score
+        self.score.text += "Streak: %d\n" % self.player.streak
+
+        # get current gesture status
         self.gesture.on_update()
+        touches = self.gesture.get_touch_states()
+        hand = self.gesture.get_hand()
+        self.score.text += "Hand: " + str(hand)
+
+        # update game logic depending on which hand is in use
+        for finger in range(4):
+            touch = False
+
+            if hand == "left":
+                touch = self.gesture.check_touch_for_finger(4 - finger)
+            if hand == "right":
+                touch = self.gesture.check_touch_for_finger(finger + 1)
+
+            if touch:
+                self.player.on_button_down(finger)
+            # elif not touches[finger]:
+            # elf.player.on_button_up(finger)
+
+        if any(touches):
+            self.opp += 1
+
+        """
         self.gesture.check_touch()
 
-        touch = self.gesture.get_any_touch_state()
-        if touch:
+        #touch = self.gesture.get_any_touch_state()
+        #print(touch)
+        if any(touch):
             if not self.touching:
-                self.notes.noteon(self.TOUCH)
+                #self.notes.noteon(self.TOUCH)
+                for i in range(len(touch)):
+                    if touch[i]:
+                        self.player.on_button_down(i)
                 self.touching = True
-
-                self.opposition += 1  # keeps track of total number of exc
         else:
             if self.touching:
-                self.notes.noteoff(self.TOUCH)
+                #self.notes.noteoff(self.TOUCH)
+                self.player.on_button_up(touch)
                 self.touching = False
-
-        self.label.text = ""
-        self.label.text += str(getLeapInfo())
+        """
 
     def on_layout(self, window_size):
         # resize background
         ASPECT = 16 / 9
-        width = min(Window.width, Window.height * ASPECT)
+        width = max(Window.width, Window.height * ASPECT)
         height = width / ASPECT
         bg_size = np.array([width, height])
         bg_pos = (np.array([Window.width, Window.height]) - bg_size) / 2
@@ -157,39 +162,317 @@ class MainWidget(BaseWidget):
         self.bg.size = bg_size
 
         # resize gesture widget
-        kMargin = width * 0.005
+        kMargin = Window.width * 0.005
         kCursorAreaSize = (
-            width / 4 - 2 * kMargin,
-            height / 4 - 2 * kMargin,
+            Window.width / 4 - 2 * kMargin,
+            Window.height / 4 - 2 * kMargin,
         )
         kCursorAreaPos = (
-            bg_pos[0] + width - kCursorAreaSize[0] - kMargin,
-            bg_pos[1] + kMargin,
+            Window.width - kCursorAreaSize[0] - kMargin,
+            kMargin,
         )
         self.gesture.resize_display(kCursorAreaPos, kCursorAreaSize)
 
         # resize label
-        resize_topleft_label(self.label)
+        resize_topleft_label(self.score)
 
-    # proxy while we work on gesture detection
-    def on_key_down(self, keycode, modifiers):
-        gesture_proxy = lookup(keycode[1], "qwer", (1, 2, 3, 4))
-        if gesture_proxy:
-            # make rocket shoot
-            # pass
-            print("keypress")
 
-            self.rockets[gesture_proxy - 1].flame_on()
-            self.notes.noteon(keycode[1])
+class ExplosionsWidget(Widget):
+    def __init__(self, *args, **kwargs):
+        super(ExplosionsWidget, self).__init__()
+        self.explosions = []
 
-    def on_key_up(self, keycode):
-        gesture_proxy = lookup(keycode[1], "qwer", (1, 2, 3, 4))
-        if gesture_proxy:
-            # stop rocket shooting
-            self.rockets[gesture_proxy - 1].flame_off()
-            self.notes.noteoff(keycode[1])
+    def add_explosion(self, pos, duration):
+        # Explosion(pos, duration)
+        ps = ParticleSystem("images/particle_flame/particle.pex")
+        ps.emitter_x = pos[0]
+        ps.emitter_y = pos[1]
+        ps.start()
+        self.add_widget(ps)
+        self.explosions.append(ps)
+        Clock.schedule_once(self.stop_explosion, duration)
+
+    def stop_explosion(self, *args):
+        ps = self.explosions.pop(0)
+        ps.stop()
+        self.remove_widget(ps)
+
+
+# holds data for gems and barlines.
+class SongData(object):
+    def __init__(self):
+        super(SongData, self).__init__()
+        self.solo = [[0, 0, True]]
+        self.bg = []
+
+    # read the gems and song data
+    def read_data(self, solo_path, bg_path):
+
+        # store solo as pairs of (sound time, lane index)
+        with open(solo_path) as f:
+            for line in f.readlines():
+                split = line.strip().split(",")
+                # self.solo.append((round(float(split[0])), self.solo[-1][1], False))
+                self.solo[-1].append(float(split[0]))
+                self.solo.append([float(split[0]), min(int(split[1]) - 1, 3)])
+
+        # store bar lines as the time locations
+        with open(bg_path) as f:
+            self.bg = [float(line.split(",")[0]) for line in f.readlines()]
+
+
+# Displays and controls all game elements: Nowbar, Buttons, BarLines, Gems.
+class BeatMatchDisplay(InstructionGroup):
+    MEASURE = Window.height * 0.2
+    NOW_BAR = Window.height * 0.25
+    BARLINE_WIDTH = 2
+    NOWBAR_WIDTH = 8
+
+    def __init__(self, song_data):
+        super(BeatMatchDisplay, self).__init__()
+        self.song_data = song_data
+
+        WIDTH = Window.width
+        HEIGHT = Window.height
+
+        # collection of lane colors
+        self.colors = (
+            (1.000, 0.651, 0.188),
+            (0.843, 0.910, 0.729),
+            (0.302, 0.631, 0.663),
+            (0.180, 0.314, 0.467),
+            (0.380, 0.110, 0.208),
+        )
+
+        self.offset = WIDTH / 8
+        self.diff = (WIDTH - 2 * self.offset) / 3
+
+        # bar lines
+        self.lines = []
+        self.line_colors = []
+        for bar in self.song_data.bg:
+            y = bar * self.MEASURE
+            line = Line(points=[0, y, WIDTH, y], width=self.BARLINE_WIDTH,)
+            line_color = Color(1, 1, 1)
+            self.lines.append(line)
+            self.line_colors.append(line_color)
+            self.add(line_color)
+            self.add(line)
+
+        # now bar
+        self.add(Color(0.5, 0.5, 0.5))
+        self.add(
+            Line(points=[0, self.NOW_BAR, WIDTH, self.NOW_BAR], width=self.NOWBAR_WIDTH)
+        )
+
+        # buttons
+        self.buttons = []
+        # btn_texture = None
+        btn_texture = Image("images/yellowship.png").texture
+        for i in range(4):
+            button = ButtonDisplay(
+                (i * self.diff + self.offset, self.NOW_BAR),
+                Color(*self.colors[i]),
+                texture=btn_texture,
+            )
+            self.buttons.append(button)
+            self.add(button)
+
+        # gems
+        self.gems = []
+        # gem_width_half = Window.width / 50
+        gem_texture = Image("images/asteroid.png").texture
+        for gem in self.song_data.solo:
+            if len(gem) < 3:
+                continue
+            gem_obj = GemDisplay(
+                (gem[1] * self.diff + self.offset, gem[0] * self.MEASURE),
+                Color(*self.colors[gem[1]]),
+                texture=gem_texture,
+            )
+            # gem_obj = GemBarDisplay(
+            #    (
+            #        gem[1] * diff + offset - gem_width_half,
+            #        gem[0] * self.MEASURE,
+            #    ),
+            #    (2 * gem_width_half, (gem[2] - gem[0]) * self.MEASURE),
+            #    Color(*self.colors[gem[1]]),
+            # )
+            self.gems.append(gem_obj)
+            self.add(gem_obj)
+
+    # called by Player. Causes the right thing to happen
+    def gem_hit(self, gem_idx):
+        self.gems[gem_idx].on_hit()
+
+    # called by Player. Causes the right thing to happen
+    def gem_pass(self, gem_idx):
+        self.gems[gem_idx].on_pass()
+
+    # called by Player. Causes the right thing to happen
+    def on_button_down(self, lane, hit):
+        self.buttons[lane].on_down(hit)
+
+    # called by Player. Causes the right thing to happen
+    def on_button_up(self, lane):
+        self.buttons[lane].on_up()
+
+    # call every frame to handle animation needs
+    def on_update(self, time):
+        offset = Window.width / 8
+        diff = (Window.width - 2 * offset) / 3
+        trans_y = -1 * time * self.MEASURE + self.NOW_BAR
+
+        # update bar lines
+        for i in range(len(self.song_data.bg)):
+            bar = self.song_data.bg[i]
+
+            # compute line endpoint locations
+            y = bar * self.MEASURE + trans_y
+            real_pt0 = (0, y)
+            real_pt1 = (Window.width, y)
+            (fake_pt0, size_scale) = self.fake_3d(real_pt0)
+            (fake_pt1, size_scale) = self.fake_3d(real_pt1)
+
+            # set the new locations
+            self.lines[i].points = [*fake_pt0, *fake_pt1]
+            self.lines[i].width = size_scale * self.BARLINE_WIDTH
+
+            # set new color
+            yc = 1 - np.clip(0.5 * (y - self.NOW_BAR) / Window.height, 0, 0.75)
+            self.line_colors[i].rgb = (yc, yc, yc)
+
+        # update gems
+        gem_count = 0
+        for gem in self.song_data.solo:
+            if len(gem) < 3:
+                continue
+
+            # apply translation for real position
+            # apply 3d effect for effective "fake" position
+            gem_obj = self.gems[gem_count]
+            real_pos = (
+                gem[1] * diff + offset,
+                gem[0] * self.MEASURE + trans_y,
+            )
+            (fake_pos, size_scale) = self.fake_3d(real_pos)
+
+            # set the new values
+            gem_obj.set_pos(fake_pos)
+            gem_obj.set_size_scale(size_scale)
+            gem_count += 1
+
+    # apply a fake 3d effect to the given point
+    def fake_3d(self, pt):
+        (in_x, in_y) = pt
+
+        # point at "infinity"
+        # roughly center of screen
+        (c_x, c_y) = (Window.width / 2, Window.height * 0.475)
+
+        # compute the scaling constant
+        c = np.tan(self.NOW_BAR / c_y * (np.pi / 2)) / self.NOW_BAR
+
+        # scale y coordinate
+        out_y = np.arctan(in_y * c) / (np.pi / 2) * c_y
+
+        # x coordinate lies on intersection of out_y with
+        # the line from (in_x, self.NOW_BAR) to center of screen
+        m = (in_x - c_x) / (self.NOW_BAR - c_y)
+        out_x = c_x + m * (out_y - c_y)
+
+        # scaling factor for object size
+        size_scale = (out_y - c_y) / (self.NOW_BAR - c_y)
+
+        return ((out_x, out_y), size_scale)
+
+
+# Handles game logic and keeps score.
+# Controls the display and the audio
+class Player(object):
+    def __init__(self, song_data, display, audio_ctrl, explosions):
+        super(Player, self).__init__()
+        self.song_data = song_data
+        self.display = display
+        self.audio_ctrl = audio_ctrl
+        self.explosions = explosions
+
+        self.time = 0
+        self.gem_idx = 0
+        self.score = 0
+        self.streak = 0
+
+    # called by MainWidget
+    def on_button_down(self, lane):
+        hit = False
+
+        # if solo hasn't ended
+        if self.gem_idx < len(self.song_data.solo):
+
+            if (
+                self.song_data.solo[self.gem_idx + 1][0] - SLOP
+                <= self.time
+                <= self.song_data.solo[self.gem_idx + 1][2] + SLOP
+            ):
+                self.gem_idx += 1
+            # check if next gem is within slop window
+            if (
+                self.song_data.solo[self.gem_idx][0] - SLOP
+                <= self.time
+                <= self.song_data.solo[self.gem_idx][2] + SLOP
+            ):
+                # if abs(self.song_data.solo[self.gem_idx][0] - self.time) <= SLOP:
+
+                # if lane matches, then we have a hit
+                if self.song_data.solo[self.gem_idx][1] == lane:
+                    self.display.gem_hit(self.gem_idx)
+                    pos = (
+                        lane * self.display.diff + self.display.offset,
+                        self.display.NOW_BAR - Window.width / 20,
+                    )
+                    # self.display.NOW_BAR
+                    self.explosions.add_explosion(pos, 0.5)
+                    hit = True
+                    self.score += 1
+                    self.streak += 1
+                    self.audio_ctrl.set_mute(False)
+
+                # this gem is used
+                self.gem_idx += 1
+
+        self.display.on_button_down(lane, hit)
+        # self.audio_ctrl.set_mute(not hit)
+
+        # miss handling
+        if not hit:
+            self.audio_ctrl.play_sfx()
+
+            # reset streak
+            if self.streak > 1:
+                self.score += self.streak
+            self.streak = 0
+
+    # called by MainWidget
+    def on_button_up(self, lane):
+        self.display.on_button_up(lane)
+
+    # needed to check for pass gems (ie, went past the slop window)
+    def on_update(self, time):
+        self.time = time
+
+        # if gems still exist, check for pass gems
+        while (
+            self.gem_idx < len(self.song_data.solo)
+            and self.song_data.solo[self.gem_idx][2] < self.time - SLOP
+        ):
+            # only enter the loop if there are pass gems
+            self.display.gem_pass(self.gem_idx)
+            self.gem_idx += 1
+            self.audio_ctrl.set_mute(True)
+            if self.streak > 1:
+                self.score += self.streak
+            self.streak = 0
 
 
 if __name__ == "__main__":
     run(MainWidget)
-    # run(MainWidget, fullscreen=True)

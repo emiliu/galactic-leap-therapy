@@ -197,6 +197,8 @@ class GemDisplay(InstructionGroup):
     # change to display this gem being hit
     def on_hit(self):
         self.color.rgb = (0.0824, 0.498, 0.1216)
+        if self.ellipse2:
+            self.remove(self.ellipse2)
 
     # change to display a passed gem
     def on_pass(self):
