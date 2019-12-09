@@ -111,12 +111,12 @@ class DashScreen(Screen):
         aspect = Window.width / Window.height
         self.back_btn = Button(background_normal="images/buttons/back.png",
                                background_down="images/buttons/back_pressed.png",
-                               size_hint=(0.208 / aspect, 0.1),
-                               pos_hint={"x": 0.05, "y": 0.05})
+                               size_hint=(0.208 / aspect * 0.75, 0.1 * 0.75),
+                               pos_hint={"x": 0.03, "y": 0.05})
         self.about_btn = Button(background_normal="images/buttons/about.png",
                                 background_down="images/buttons/about_pressed.png",
-                                size_hint=(0.255 / aspect, 0.1),
-                                pos_hint={"right": 0.95, "y": 0.05})
+                                size_hint=(0.255 / aspect * 0.75, 0.1 * 0.75),
+                                pos_hint={"right": 0.97, "y": 0.05})
         self.back_btn.bind(on_release=lambda btn: self.switch_screen("menu"))
         self.about_btn.bind(on_release=lambda btn: self.switch_screen("help"))
         self.add_widget(self.back_btn)
@@ -124,8 +124,8 @@ class DashScreen(Screen):
 
     def update_size(self):
         aspect = Window.width / Window.height
-        self.back_btn.size_hint = (0.208 / aspect, 0.1)
-        self.about_btn.size_hint = (0.255 / aspect, 0.1)
+        self.back_btn.size_hint = (0.208 / aspect * 0.75, 0.1 * 0.75)
+        self.about_btn.size_hint = (0.255 / aspect * 0.75, 0.1 * 0.75)
 
         ASPECT = 1902 / 1358
         width = min(Window.width, Window.height * ASPECT) * 0.9
