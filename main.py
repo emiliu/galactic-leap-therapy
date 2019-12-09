@@ -27,41 +27,43 @@ class MenuScreen(Screen):
 
         self.bg = Rectangle(source="images/splash.png", size=Window.size)
         self.window_size = (0, 0)
-        self.scale_bg()
         self.canvas.add(self.bg)
-
-        Clock.schedule_interval(self.scale_bg, 0)
 
         self.score = CLabelRect(pos=(self.window_size[0] / 10, self.window_size[1]))
         self.opposition = 0
         self.flexion = 0
-
-        # label_layout = AnchorLayout(size_hint=(1,1))
 
         self.score.label.text = "Opposition Completed: %d\n" % self.opposition
         self.score.label.text += "Flexion Completed: %d\n" % self.flexion
 
         self.canvas.add(self.score)
 
-        toggle_layout = BoxLayout(
-            orientation="horizontal",
-            size_hint=(0.5, 0.1),
-            pos_hint={"center_x": 0.5, "center_y": 0.25},
-        )
-        self.opp_btn = ToggleButton(text="opp", group="game_choice", state="down")
-        self.flex_btn = ToggleButton(text="flex", group="game_choice")
+        aspect = Window.width / Window.height
+        self.opp_btn = ToggleButton(text="", group="game_choice", state="down",
+                                    background_down="images/buttons/opposition.png",
+                                    background_normal="images/buttons/opposition_unselected.png",
+                                    size_hint=(0.294 / aspect, 0.1),
+                                    pos_hint={"center_x": 0.35, "center_y": 0.25})
+        self.flex_btn = ToggleButton(text="", group="game_choice",
+                                    background_down="images/buttons/flexion.png",
+                                    background_normal="images/buttons/flexion_unselected.png",
+                                    size_hint=(0.24 / aspect, 0.1),
+                                    pos_hint={"center_x": 0.65, "center_y": 0.25})
 
-        start_btn = Button(
-            text="start",
-            size_hint=(0.2, 0.1),
+        self.start_btn = Button(
+            text="",
+            size_hint=(0.207 / aspect, 0.1),
             pos_hint={"center_x": 0.5, "center_y": 0.1},
+            background_normal="images/buttons/start.png",
+            background_down="images/buttons/start_pressed.png"
         )
-        start_btn.bind(on_release=self.change_screen)
+        self.start_btn.bind(on_release=self.change_screen)
 
-        toggle_layout.add_widget(self.opp_btn)
-        toggle_layout.add_widget(self.flex_btn)
-        self.add_widget(toggle_layout)
-        self.add_widget(start_btn)
+        self.add_widget(self.opp_btn)
+        self.add_widget(self.flex_btn)
+        self.add_widget(self.start_btn)
+
+        Clock.schedule_interval(self.scale_bg, 0)
 
     def change_screen(self, btn):
         if self.opp_btn.state == "down":
@@ -83,6 +85,11 @@ class MenuScreen(Screen):
             self.bg.pos = bg_pos
             self.bg.size = bg_size
 
+            aspect = Window.width / Window.height
+            self.opp_btn.size_hint = (0.294 / aspect, 0.1)
+            self.flex_btn.size_hint = (0.24 / aspect, 0.1)
+            self.start_btn.size_hint = (0.207 / aspect, 0.1)
+
 
 class GameScreen(Screen):
     def __init__(self, switch_screen_callback):
@@ -94,7 +101,12 @@ class GameScreen(Screen):
         self.game_widget = None
         self.type = None
 
-        self.exit_btn = Button(text="exit", size_hint=(0.1, 0.1), pos=(0, 0))
+        aspect = Window.width / Window.height
+
+        self.exit_btn = Button(text="", pos=(10, 10),
+                               background_normal="images/buttons/exit.png",
+                               background_down="images/buttons/exit_pressed.png",
+                               size_hint=(0.169 / aspect, 0.1))
         self.exit_btn.bind(on_release=self.exit_game)
         self.add_widget(self.exit_btn, index=0)
 
@@ -105,6 +117,8 @@ class GameScreen(Screen):
             self.game_widget = FlexWidget()
         else:
             raise Exception("No such game")
+        aspect = Window.width / Window.height
+        self.exit_btn.size_hint = (0.169 / aspect, 0.1)
         self.add_widget(self.game_widget, index=2)
         self.type = game
 
