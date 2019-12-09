@@ -300,13 +300,38 @@ class ProgressBar(InstructionGroup):
         self.add(self.color)
         self.add(self.line)
 
-    def set_total_time(self, total_len):
+    def set_total(self, total_len):
         self.total = total_len
 
     def on_update(self, time):
         time_frac = time / self.total
         current_pos = self.pt0 + time_frac * (self.pt1 - self.pt0)
         self.line.points = [*self.pt0, *current_pos]
+
+
+class ProgressRect(InstructionGroup):
+    def __init__(self, pt0, pt1, color):
+        super(ProgressRect, self).__init__()
+
+        self.color = color
+        self.pt0 = np.array(pt0)
+        self.pt1 = np.array(pt1)
+        self.width = width
+        self.total = 0
+
+        self.rect_outline = Line(rectangle=[*self.pt0, *(self.pt1 - self.pt0)])
+        self.rect_fill = Rectangle(pos=self.pt0, size=(0, 0))
+        self.add(self.color)
+        self.add(self.rect_fill)
+        self.add(self.rect_outline)
+
+    def set_total(self, total_len):
+        self.total = total_len
+
+    def on_update(self, time):
+        time_frac = time / self.total
+        current_width = self.pt0[0] + time_frac * (self.pt1[0] - self.pt0[0])
+        self.rect_fill.size = (current_width, self.pt1[1] - self.pt0[1])
 
 
 class MainWidget(BaseWidget):

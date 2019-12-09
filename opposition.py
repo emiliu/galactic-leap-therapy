@@ -313,7 +313,7 @@ class BeatMatchDisplay(InstructionGroup):
         self.progress = ProgressBar(
             (Window.width, 0), (Window.width, Window.height), Color(0.2, 0.93, 0.48)
         )
-        self.progress.set_total_time(max(song_solo_len, song_bg_len))
+        self.progress.set_total(max(song_solo_len, song_bg_len))
         self.add(self.progress)
 
     # called by Player. Causes the right thing to happen

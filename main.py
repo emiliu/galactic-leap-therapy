@@ -27,7 +27,7 @@ class MenuScreen(Screen):
         self.switch_screen = switch_screen_callback
 
         self.bg = Rectangle(source="images/splash.png", size=Window.size)
-        self.window_size = (0, 0)
+        self.window_size = Window.size
         self.canvas.add(self.bg)
 
         self.score = CLabelRect(pos=(self.window_size[0] / 4, self.window_size[1]))
@@ -44,29 +44,43 @@ class MenuScreen(Screen):
         self.canvas.add(self.score)
 
         aspect = Window.width / Window.height
-        self.opp_btn = ToggleButton(text="", group="game_choice", state="down",
-                                    background_down="images/buttons/opposition.png",
-                                    background_normal="images/buttons/opposition_unselected.png",
-                                    size_hint=(0.294 / aspect, 0.1),
-                                    pos_hint={"center_x": 0.35, "center_y": 0.25})
-        self.flex_btn = ToggleButton(text="", group="game_choice",
-                                    background_down="images/buttons/flexion.png",
-                                    background_normal="images/buttons/flexion_unselected.png",
-                                    size_hint=(0.24 / aspect, 0.1),
-                                    pos_hint={"center_x": 0.65, "center_y": 0.25})
+        self.opp_btn = ToggleButton(
+            text="",
+            group="game_choice",
+            state="down",
+            background_down="images/buttons/opposition.png",
+            background_normal="images/buttons/opposition_unselected.png",
+            size_hint=(0.294 / aspect, 0.1),
+            pos_hint={"center_x": 0.35, "center_y": 0.25},
+        )
+        self.flex_btn = ToggleButton(
+            text="",
+            group="game_choice",
+            background_down="images/buttons/flexion.png",
+            background_normal="images/buttons/flexion_unselected.png",
+            size_hint=(0.24 / aspect, 0.1),
+            pos_hint={"center_x": 0.65, "center_y": 0.25},
+        )
 
         self.start_btn = Button(
             text="",
             size_hint=(0.207 / aspect, 0.1),
             pos_hint={"center_x": 0.5, "center_y": 0.1},
             background_normal="images/buttons/start.png",
-            background_down="images/buttons/start_pressed.png"
+            background_down="images/buttons/start_pressed.png",
         )
         self.start_btn.bind(on_release=self.change_screen)
+
+        self.stats_btn = Button(
+            text="Open Dashboard",
+            size_hint=(0.1, 0.05),
+            pos_hint={"center_x": 0.5, "center_y": 0.95},
+        )
 
         self.add_widget(self.opp_btn)
         self.add_widget(self.flex_btn)
         self.add_widget(self.start_btn)
+        self.add_widget(self.stats_btn)
 
         Clock.schedule_interval(self.scale_bg, 0)
 
@@ -108,10 +122,13 @@ class GameScreen(Screen):
 
         aspect = Window.width / Window.height
 
-        self.exit_btn = Button(text="", pos=(10, 10),
-                               background_normal="images/buttons/exit.png",
-                               background_down="images/buttons/exit_pressed.png",
-                               size_hint=(0.169 / aspect, 0.1))
+        self.exit_btn = Button(
+            text="",
+            pos=(10, 10),
+            background_normal="images/buttons/exit.png",
+            background_down="images/buttons/exit_pressed.png",
+            size_hint=(0.169 / aspect, 0.1),
+        )
         self.exit_btn.bind(on_release=self.exit_game)
         self.add_widget(self.exit_btn, index=0)
 
