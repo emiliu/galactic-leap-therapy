@@ -31,8 +31,9 @@ class MenuScreen(Screen):
         self.flexion = 0
 
         # label_layout = AnchorLayout(size_hint=(1,1))
-        text = "Opposition: %d\n" % self.opposition
-        text += "Flexion Complete: %d\n" % self.flexion
+        text = "Progress Today \n"
+        text += "Opposition: %d /50 \n" % self.opposition
+        text += "Flexion: %d /50 \n" % self.flexion
         self.score.set_text(text)
         # self.score.label.text += "[color=ffffff] Flexion Complete: %d\n [/color]" % self.flexion
 
@@ -70,6 +71,20 @@ class MenuScreen(Screen):
 
         Clock.schedule_interval(self.scale_bg, 0)
 
+    def update_score(self, game, score):
+        if game == "opp":
+            self.opposition += score
+        if game == "flex":
+            self.flexion += score
+
+        text = "Progress Today \n"
+        text += "Opposition: %d /50 \n" % self.opposition
+        text += "Flexion: %d /50 \n" % self.flexion
+        self.score.set_text(text)
+
+
+
+
     def scale_bg(self, *args):
         # resize background
         if Window.size != self.window_size:
@@ -91,7 +106,6 @@ class GameScreen(Screen):
     def __init__(self, switch_screen_callback):
         super(GameScreen, self).__init__()
 
-        self.opposition = 0
 
         self.switch_screen = switch_screen_callback
         self.game_widget = None
@@ -132,12 +146,9 @@ class GameScreen(Screen):
         # for t in g_terminate_funcs:
         # t()
 
-        if self.type == "opp":
-            self.opposition += self.game_widget.opp
-            print("new score", self.opposition)
-
-        self.remove_widget(self.game_widget)
+        
         self.switch_screen("menu")
+        self.remove_widget(self.game_widget)
 
 
 class MainApp(App):
@@ -159,6 +170,12 @@ class MainApp(App):
             self.sm.switch_to(self.game_screen)
 
         if switch_to == "menu":
+            #gets the score from opp or flex
+            score = self.game_screen.game_widget.get_score() 
+            print("new score", score)
+            self.menu_screen.update_score(self.game_screen.type, score)
+           
+
             self.sm.switch_to(self.menu_screen)
 
 

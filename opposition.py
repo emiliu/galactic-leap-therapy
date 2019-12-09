@@ -79,7 +79,7 @@ class MainWidget(BaseWidget):
         # self.TOUCH = 10
 
         # self.audio.toggle()
-        self.opp = 0  # number of opp exc completed
+        #self.opp = self.player.score  # number of opp exc completed in time
 
         self.add_widget(self.explosions)
 
@@ -98,6 +98,9 @@ class MainWidget(BaseWidget):
         button_idx = lookup(keycode[1], "12345", (0, 1, 2, 3, 4))
         if button_idx is not None:
             self.player.on_button_up(button_idx)
+
+    def get_score(self):
+        return self.player.score
 
     def on_update(self):
         # update game based on audio time
@@ -128,9 +131,6 @@ class MainWidget(BaseWidget):
                 self.player.on_button_down(finger)
             # elif not touches[finger]:
             # elf.player.on_button_up(finger)
-
-        if any(touches):
-            self.opp += 1
 
         """
         self.gesture.check_touch()
