@@ -6,6 +6,7 @@ from kivy.uix.screenmanager import Screen
 
 import numpy as np
 
+
 class HelpScreen(Screen):
     def __init__(self, switch_screen_callback):
         super(HelpScreen, self).__init__()
@@ -21,24 +22,24 @@ class HelpScreen(Screen):
             background_normal="images/buttons/play.png",
             background_down="images/buttons/play_pressed.png",
             size_hint=(0.184 / aspect, 0.1),
-            pos_hint={"center_x": 0.5, "center_y": 0.15}
+            pos_hint={"center_x": 0.5, "center_y": 0.15},
         )
         self.back_btn = Button(
             background_normal="images/buttons/back.png",
             background_down="images/buttons/back_pressed.png",
             size_hint=(0.208 / aspect, 0.1),
-            pos_hint={"x": 0.05, "y": 0.05}
+            pos_hint={"x": 0.05, "y": 0.05},
         )
         self.back_btn.bind(on_release=lambda btn: self.switch_screen("menu"))
         self.add_widget(self.back_btn)
 
-        self.title = Label(pos_hint={"center_x" : 0.5, "center_y" : 0.9})
-        self.text = Label(pos_hint={"center_x" : 0.5, "center_y" : 0.5})
+        self.title = Label(pos_hint={"center_x": 0.5, "center_y": 0.9})
+        self.text = Label(pos_hint={"center_x": 0.5, "center_y": 0.5})
         self.add_widget(self.title)
         self.add_widget(self.text)
 
         self.texts = {
-            "main" : """
+            "main": """
 This application is a series of games to make
 hand rehabilitation exercises more effective,
 fun, and musical!
@@ -49,7 +50,7 @@ and wrist flexion exercises.
 Enter your goals and track your progress
 using the dashboard!
 """,
-            "opp" : """
+            "opp": """
 Each finger corresponds to a rocket ship.
 
 Your palm should be facing down toward the sensor.
@@ -59,19 +60,15 @@ an asteroid reaches the rocket!
 
 This exercise helps you practice finger opposition.
 """,
-            "flex" : """
+            "flex": """
 Make your hand flat and turn your hand left and
 right to control the spaceship and keep it on the path.
 
 This exercise helps you practice wrist flexion.
-"""
+""",
         }
 
-        self.titles = {
-            "main" : "About",
-            "opp" : "Opposition",
-            "flex" : "Flexion"
-        }
+        self.titles = {"main": "About", "opp": "Opposition", "flex": "Flexion"}
 
         self.play_fn = None
 
@@ -100,6 +97,7 @@ This exercise helps you practice wrist flexion.
 
         self.bg.size = Window.size
 
+
 class DashScreen(Screen):
     def __init__(self, switch_screen_callback):
         super(DashScreen, self).__init__()
@@ -117,13 +115,13 @@ class DashScreen(Screen):
             background_normal="images/buttons/back.png",
             background_down="images/buttons/back_pressed.png",
             size_hint=(0.208 / aspect * 0.75, 0.1 * 0.75),
-            pos_hint={"x": 0.03, "y": 0.05}
+            pos_hint={"x": 0.03, "y": 0.05},
         )
         self.about_btn = Button(
             background_normal="images/buttons/about.png",
             background_down="images/buttons/about_pressed.png",
             size_hint=(0.255 / aspect * 0.75, 0.1 * 0.75),
-            pos_hint={"right": 0.97, "y": 0.05}
+            pos_hint={"right": 0.97, "y": 0.05},
         )
         self.back_btn.bind(on_release=lambda btn: self.switch_screen("menu"))
         self.about_btn.bind(on_release=lambda btn: self.switch_screen("help"))
