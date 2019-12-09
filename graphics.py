@@ -287,6 +287,28 @@ class TileDisplay(InstructionGroup):
         self.color.rgb = c_scale * self.original_color
 
 
+class ProgressBar(InstructionGroup):
+    def __init__(self, pt0, pt1, color, width=5):
+        super(ProgressBar, self).__init__()
+
+        self.color = color
+        self.pt0 = np.array(pt0)
+        self.pt1 = np.array(pt1)
+        self.total = 0
+
+        self.line = Line(points=[*self.pt0, *self.pt0], width=width, cap="none")
+        self.add(self.color)
+        self.add(self.line)
+
+    def set_total_time(self, total_len):
+        self.total = total_len
+
+    def on_update(self, time):
+        time_frac = time / self.total
+        current_pos = self.pt0 + time_frac * (self.pt1 - self.pt0)
+        self.line.points = [*self.pt0, *current_pos]
+
+
 class MainWidget(BaseWidget):
     def __init__(self):
         super(MainWidget).__init__()

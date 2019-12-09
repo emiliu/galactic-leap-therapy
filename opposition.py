@@ -19,7 +19,7 @@ from kivy.uix.widget import Widget
 
 from audio import AudioController
 from gesture import GestureWidget
-from graphics import ButtonDisplay, GemDisplay
+from graphics import ButtonDisplay, GemDisplay, ProgressBar
 
 
 # slop window in seconds
@@ -231,6 +231,8 @@ class BeatMatchDisplay(InstructionGroup):
     def __init__(self, song_data):
         super(BeatMatchDisplay, self).__init__()
         self.song_data = song_data
+        song_solo_len = song_data.solo[-1][0]
+        song_bg_len = song_data.bg[-1]
 
         WIDTH = Window.width
         HEIGHT = Window.height
@@ -301,6 +303,13 @@ class BeatMatchDisplay(InstructionGroup):
             self.gems.append(gem_obj)
             self.add(gem_obj)
 
+        # progress bar
+        self.progress = ProgressBar(
+            (Window.width, 0), (Window.width, Window.height), Color(0.2, 0.93, 0.48)
+        )
+        self.progress.set_total_time(max(song_solo_len, song_bg_len))
+        self.add(self.progress)
+
     # called by Player. Causes the right thing to happen
     def gem_hit(self, gem_idx):
         self.gems[gem_idx].on_hit()
@@ -361,6 +370,9 @@ class BeatMatchDisplay(InstructionGroup):
             gem_obj.set_pos(fake_pos)
             gem_obj.set_size_scale(size_scale)
             gem_count += 1
+
+        # update progress bar
+        self.progress.on_update(time)
 
     # apply a fake 3d effect to the given point
     def fake_3d(self, pt):

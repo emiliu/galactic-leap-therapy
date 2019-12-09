@@ -23,7 +23,7 @@ import scipy.interpolate
 
 from audio import AudioController
 from gesture import GestureWidget
-from graphics import FlexShip, TileDisplay
+from graphics import FlexShip, TileDisplay, ProgressBar
 from sounds import NoteCluster, NoteSequencer
 from opposition import SongData
 
@@ -281,6 +281,13 @@ class BeatMatchDisplay(InstructionGroup):
         self.rocket = FlexShip(pos)
         self.add(self.rocket)
 
+        # progress bar
+        self.progress = ProgressBar(
+            (Window.width, 0), (Window.width, Window.height), Color(0.2, 0.93, 0.48)
+        )
+        self.progress.set_total_time(max(song_solo_len, song_bg_len))
+        self.add(self.progress)
+
     # call every frame to handle animation needs
     def on_update(self, time):
         trans_y = -1 * self.HEIGHT_PER_SECOND * time
@@ -317,6 +324,9 @@ class BeatMatchDisplay(InstructionGroup):
             if pos[1] > -0.1 * Window.height and pos[1] < 2 * Window.height:
                 self.tile_display[i].set_position(pos)
                 self.tile_display[i].on_update()
+
+        # update progress bar
+        self.progress.on_update(time)
 
     def set_rocket_position(self, pos):
         self.rocket.set_position(pos)

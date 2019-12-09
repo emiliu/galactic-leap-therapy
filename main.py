@@ -38,8 +38,9 @@ class MenuScreen(Screen):
 
         # label_layout = AnchorLayout(size_hint=(1,1))
 
-        self.score.label.text = "Opposition Completed: %d\n" % self.opposition
-        self.score.label.text += "Flexion Completed: %d\n" % self.flexion
+        label_text = "Opposition Completed: %d\n" % self.opposition
+        label_text += "Flexion Completed: %d\n" % self.flexion
+        self.score.set_text(label_text)
 
         self.canvas.add(self.score)
 
