@@ -314,9 +314,9 @@ class BeatMatchDisplay(InstructionGroup):
                     + trans_y,
                 ]
             )
-            if pos[1] > -0.1 * Window.height and pos[1] < 5 * Window.height:
+            if pos[1] > -0.1 * Window.height and pos[1] < 2 * Window.height:
                 self.tile_display[i].set_position(pos)
-            self.tile_display[i].on_update()
+                self.tile_display[i].on_update()
 
     def set_rocket_position(self, pos):
         self.rocket.set_position(pos)
