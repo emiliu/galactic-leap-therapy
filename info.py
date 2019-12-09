@@ -1,7 +1,10 @@
 from kivy.core.window import Window
+from kivy.graphics import Color, Rectangle
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen
+
+import numpy as np
 
 class HelpScreen(Screen):
     def __init__(self, switch_screen_callback):
@@ -9,6 +12,9 @@ class HelpScreen(Screen):
 
         self.switch_screen = switch_screen_callback
         self.game_type = None
+
+        self.bg = Rectangle(source="images/purplehole.jpg", size=Window.size)
+        self.canvas.add(self.bg)
 
         aspect = Window.width / Window.height
         self.play_btn = Button(background_normal="images/buttons/play.png",
@@ -88,11 +94,19 @@ This exercise helps you practice wrist flexion.
         self.title.font_size = Window.height / 10
         self.text.font_size = Window.height / 20
 
+        self.bg.size = Window.size
+
 class DashScreen(Screen):
     def __init__(self, switch_screen_callback):
         super(DashScreen, self).__init__()
 
         self.switch_screen = switch_screen_callback
+
+        self.rect = Rectangle(pos=(0, 0), size=Window.size)
+        self.bg = Rectangle(source="images/dashboard.png", size=Window.size)
+        self.canvas.add(Color(1, 1, 1, 1))
+        self.canvas.add(self.rect)
+        self.canvas.add(self.bg)
 
         aspect = Window.width / Window.height
         self.back_btn = Button(background_normal="images/buttons/back.png",
@@ -112,3 +126,12 @@ class DashScreen(Screen):
         aspect = Window.width / Window.height
         self.back_btn.size_hint = (0.208 / aspect, 0.1)
         self.about_btn.size_hint = (0.255 / aspect, 0.1)
+
+        ASPECT = 1902 / 1358
+        width = min(Window.width, Window.height * ASPECT) * 0.9
+        height = width / ASPECT * 0.9
+        bg_size = np.array([width, height])
+        bg_pos = (np.array([Window.width, Window.height]) - bg_size) / 2
+        self.bg.pos = bg_pos
+        self.bg.size = bg_size
+        self.rect.size = Window.size

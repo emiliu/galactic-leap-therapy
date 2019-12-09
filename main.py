@@ -1,7 +1,7 @@
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.graphics import Rectangle, Color
+from kivy.graphics import Color, Rectangle
 from kivy.uix.button import Button
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
 
