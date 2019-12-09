@@ -1,5 +1,6 @@
 from kivy.core.window import Window
 from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen
 
 class HelpScreen(Screen):
@@ -13,21 +14,63 @@ class HelpScreen(Screen):
         self.play_btn = Button(background_normal="images/buttons/play.png",
                                background_down="images/buttons/play_pressed.png",
                                size_hint=(0.184 / aspect, 0.1),
-                               pos_hint={"center_x": 0.5, "center_y": 0.2})
+                               pos_hint={"center_x": 0.5, "center_y": 0.15})
         self.back_btn = Button(background_normal="images/buttons/back.png",
                                background_down="images/buttons/back_pressed.png",
                                size_hint=(0.208 / aspect, 0.1),
                                pos_hint={"x": 0.05, "y": 0.05})
         self.back_btn.bind(on_release=lambda btn: self.switch_screen("menu"))
         self.add_widget(self.back_btn)
-        self.text = None
-        self.texts = {}
+
+        self.title = Label(pos_hint={"center_x" : 0.5, "center_y" : 0.9})
+        self.text = Label(pos_hint={"center_x" : 0.5, "center_y" : 0.5})
+        self.add_widget(self.title)
+        self.add_widget(self.text)
+
+        self.texts = {
+            "main" : """
+This application is a series of games to make
+hand rehabilitation exercises more effective,
+fun, and musical!
+
+These games help with both finger opposition
+and wrist flexion exercises.
+
+Enter your goals and track your progress
+using the dashboard!
+""",
+            "opp" : """
+Each finger corresponds to a rocket ship.
+
+Your palm should be facing down toward the sensor.
+
+Touch your thumb to the correct finger when
+an asteroid reaches the rocket!
+
+This exercise helps you practice finger opposition.
+""",
+            "flex" : """
+Make your hand flat and turn your hand left and
+right to control the spaceship and keep it on the path.
+
+This exercise helps you practice wrist flexion.
+"""
+        }
+
+        self.titles = {
+            "main" : "About",
+            "opp" : "Opposition",
+            "flex" : "Flexion"
+        }
+
         self.play_fn = None
 
     def set_game(self, game_type):
         if game_type is None:
             if self.play_btn in self.children:
                 self.remove_widget(self.play_btn)
+            self.title.text = self.titles["main"]
+            self.text.text = self.texts["main"]
 
         else:
             if self.play_btn not in self.children:
@@ -35,10 +78,15 @@ class HelpScreen(Screen):
             self.play_btn.unbind(on_release=self.play_fn)
             self.play_fn = lambda btn: self.switch_screen("game", game_type)
             self.play_btn.bind(on_release=self.play_fn)
+            self.title.text = self.titles[game_type]
+            self.text.text = self.texts[game_type]
 
         aspect = Window.width / Window.height
         self.play_btn.size_hint = (0.184 / aspect, 0.1)
         self.back_btn.size_hint = (0.208 / aspect, 0.1)
+
+        self.title.font_size = Window.height / 10
+        self.text.font_size = Window.height / 20
 
 class DashScreen(Screen):
     def __init__(self, switch_screen_callback):
