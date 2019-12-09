@@ -8,6 +8,7 @@ from kivy.uix.dropdown import DropDown
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
 from kivy.uix.togglebutton import ToggleButton
 from common.gfxutil import CLabelRect, topleft_label
+from kivy.uix.label import Label
 
 
 import sys
@@ -32,15 +33,16 @@ class MenuScreen(Screen):
 
         Clock.schedule_interval(self.scale_bg, 0)
 
-        self.score = CLabelRect(pos=(self.window_size[0] / 10, self.window_size[1]))
+        self.score = CLabelRect(pos=(self.window_size[0] / 4, self.window_size[1]))
+
         self.opposition = 0
         self.flexion = 0
 
         # label_layout = AnchorLayout(size_hint=(1,1))
-
-        label_text = "Opposition Completed: %d\n" % self.opposition
-        label_text += "Flexion Completed: %d\n" % self.flexion
-        self.score.set_text(label_text)
+        text = "Opposition: %d\n" % self.opposition
+        text += "Flexion Complete: %d\n" % self.flexion
+        self.score.set_text(text)
+        # self.score.label.text += "[color=ffffff] Flexion Complete: %d\n [/color]" % self.flexion
 
         self.canvas.add(self.score)
 
