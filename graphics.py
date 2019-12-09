@@ -161,7 +161,7 @@ class GemBarDisplay(InstructionGroup):
 
 # display for a single gem at a position with a color (if desired)
 class GemDisplay(InstructionGroup):
-    SIZE = Window.width / 18
+    SIZE = Window.width / 12
 
     def __init__(self, pos, color, texture=None):
         super(GemDisplay, self).__init__()
