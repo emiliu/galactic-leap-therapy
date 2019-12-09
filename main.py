@@ -11,7 +11,7 @@ import numpy as np
 from flexion import MainWidget as FlexWidget
 from opposition import MainWidget as OppWidget
 
-from info import HelpScreen, InfoScreen
+from info import DashScreen, HelpScreen
 
 # from common.core import g_terminate_funcs
 from common.gfxutil import CLabelRect
@@ -41,22 +41,26 @@ class MenuScreen(Screen):
         self.canvas.add(self.score)
 
         aspect = Window.width / Window.height
-        self.opp_btn = Button(text="",
-                              background_normal="images/buttons/opposition.png",
+        self.opp_btn = Button(background_normal="images/buttons/opposition.png",
                               background_down="images/buttons/opposition_pressed.png",
                               size_hint=(0.294 / aspect, 0.1),
                               pos_hint={"center_x": 0.35, "center_y": 0.2})
-        self.flex_btn = Button(text="",
-                               background_normal="images/buttons/flexion.png",
+        self.flex_btn = Button(background_normal="images/buttons/flexion.png",
                                background_down="images/buttons/flexion_pressed.png",
                                size_hint=(0.24 / aspect, 0.1),
                                pos_hint={"center_x": 0.65, "center_y": 0.2})
+        self.dash_btn = Button(background_normal="images/buttons/dash.png",
+                               background_down="images/buttons/dash_pressed.png",
+                               size_hint=(0.414 / aspect, 0.1),
+                               pos_hint={"center_x": 0.5, "center_y": 0.9})
 
         self.opp_btn.bind(on_release=lambda btn: self.switch_screen("help", "opp"))
         self.flex_btn.bind(on_release=lambda btn: self.switch_screen("help", "flex"))
+        self.dash_btn.bind(on_release=lambda btn: self.switch_screen("dash"))
 
         self.add_widget(self.opp_btn)
         self.add_widget(self.flex_btn)
+        self.add_widget(self.dash_btn)
 
         Clock.schedule_interval(self.scale_bg, 0)
 
@@ -75,6 +79,7 @@ class MenuScreen(Screen):
             aspect = Window.width / Window.height
             self.opp_btn.size_hint = (0.294 / aspect, 0.1)
             self.flex_btn.size_hint = (0.24 / aspect, 0.1)
+            self.dash_btn.size_hint = (0.414 / aspect, 0.1)
 
 
 class GameScreen(Screen):
@@ -89,10 +94,10 @@ class GameScreen(Screen):
 
         aspect = Window.width / Window.height
 
-        self.exit_btn = Button(text="", pos=(10, 10),
-                               background_normal="images/buttons/exit.png",
+        self.exit_btn = Button(background_normal="images/buttons/exit.png",
                                background_down="images/buttons/exit_pressed.png",
-                               size_hint=(0.169 / aspect, 0.1))
+                               size_hint=(0.169 / aspect, 0.1),
+                               pos_hint={"x": 0.05, "y": 0.05})
         self.exit_btn.bind(on_release=self.exit_game)
         self.add_widget(self.exit_btn, index=0)
 
@@ -135,7 +140,7 @@ class MainApp(App):
         self.menu_screen = MenuScreen(self.switch_screen)
         self.game_screen = GameScreen(self.switch_screen)
         self.help_screen = HelpScreen(self.switch_screen)
-        self.info_screen = InfoScreen(self.switch_screen)
+        self.dash_screen = DashScreen(self.switch_screen)
 
     def build(self):
         self.sm.add_widget(self.menu_screen)
@@ -154,8 +159,9 @@ class MainApp(App):
             self.help_screen.set_game(game_type)
             self.sm.switch_to(self.help_screen)
 
-        elif switch_to == "info":
-            self.sm.switch_to(self.info_screen)
+        elif switch_to == "dash":
+            self.dash_screen.update_size()
+            self.sm.switch_to(self.dash_screen)
 
 
 if __name__ == "__main__":
