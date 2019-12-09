@@ -15,7 +15,7 @@ import sys
 import numpy as np
 
 from flexion import MainWidget as FlexWidget
-from pset7 import MainWidget as OppWidget
+from opposition import MainWidget as OppWidget
 
 # from common.core import g_terminate_funcs
 
@@ -32,8 +32,10 @@ class MenuScreen(Screen):
         self.canvas.add(self.bg)
 
         Clock.schedule_interval(self.scale_bg, 0)
+
         
         self.score = CLabelRect(pos = (self.window_size[0]/4, self.window_size[1]))
+
 
         self.opposition = 0
         self.flexion = 0
@@ -44,10 +46,9 @@ class MenuScreen(Screen):
 
         self.score.set_text(text)
         #self.score.label.text += "[color=ffffff] Flexion Complete: %d\n [/color]" % self.flexion
-
-        
  
 
+        self.canvas.add(self.score)
 
         toggle_layout = BoxLayout(
             orientation="horizontal",
@@ -68,8 +69,6 @@ class MenuScreen(Screen):
         toggle_layout.add_widget(self.flex_btn)
         self.add_widget(toggle_layout)
         self.add_widget(start_btn)
-        self.canvas.add(self.score)
-        
 
     def change_screen(self, btn):
         if self.opp_btn.state == "down":

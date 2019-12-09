@@ -1,5 +1,6 @@
 import numpy as np
 
+from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.core.image import Image
 from kivy.uix.widget import Widget
@@ -109,9 +110,10 @@ class FlexShip(InstructionGroup):
         self.size = np.array([80, 80])
         # self.pos = pos
         self.shape = CRectangle(
-            csize=self.size, cpos=pos, segments=4, source="images/yellowship.png",
+            csize=self.size, cpos=pos, segments=4, source="images/ufo.png",
         )
 
+        self.add(Color(1, 1, 1))
         self.add(self.shape)
 
         self.flame = ParticleSystem("images/particle_flame/particle.pex")
@@ -165,15 +167,15 @@ class GemDisplay(InstructionGroup):
         super(GemDisplay, self).__init__()
         self.pos = pos
         self.color = color
-        self.texture = texture
+        # self.texture = texture
 
         # gem background
-        self.add(self.color)
+        # self.add(self.color)
         self.ellipse1 = CEllipse(cpos=pos, csize=(self.SIZE, self.SIZE))
-        self.add(self.ellipse1)
+        # self.add(self.ellipse1)
         # gem texture
         if texture is not None:
-            self.add(Color(1, 1, 1))
+            self.add(Color(1, 1, 1, 1))
             self.ellipse2 = CEllipse(
                 cpos=pos, csize=(self.SIZE, self.SIZE), texture=texture
             )
@@ -195,6 +197,8 @@ class GemDisplay(InstructionGroup):
     # change to display this gem being hit
     def on_hit(self):
         self.color.rgb = (0.0824, 0.498, 0.1216)
+        if self.ellipse2:
+            self.remove(self.ellipse2)
 
     # change to display a passed gem
     def on_pass(self):
@@ -213,8 +217,8 @@ class ButtonDisplay(InstructionGroup):
         SIZE = Window.width / 18
 
         self.color = color
-        self.add(self.color)
-        self.add(CEllipse(cpos=pos, csize=(SIZE, SIZE)))
+        # self.add(self.color)
+        # self.add(CEllipse(cpos=pos, csize=(SIZE, SIZE)))
 
         self.texture_color = Color(1, 1, 1, 1)
         self.add(self.texture_color)
