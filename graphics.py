@@ -304,7 +304,7 @@ class ProgressBar(InstructionGroup):
         self.total = total_len
 
     def on_update(self, time):
-        time_frac = time / self.total
+        time_frac = np.clip(time / self.total, 0, 1)
         current_pos = self.pt0 + time_frac * (self.pt1 - self.pt0)
         self.line.points = [*self.pt0, *current_pos]
 
@@ -336,7 +336,7 @@ class ProgressRect(InstructionGroup):
         self.total = total_len
 
     def on_update(self, time):
-        time_frac = time / self.total
+        time_frac = np.clip(time / self.total, 0, 1)
         self.time_frac = time_frac
 
         current_width = time_frac * (self.pt1[0] - self.pt0[0])
