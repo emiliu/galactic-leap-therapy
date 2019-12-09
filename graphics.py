@@ -8,7 +8,7 @@ from kivy.graphics import Color, Ellipse, Line, Rectangle, Triangle
 from kivy.graphics.instructions import InstructionGroup
 
 from common.audio import Audio
-from common.gfxutil import CRectangle, CEllipse
+from common.gfxutil import CRectangle, CEllipse, CLabelRect
 from common.core import BaseWidget, run, lookup
 from common.kivyparticle import ParticleSystem
 
@@ -316,22 +316,47 @@ class ProgressRect(InstructionGroup):
         self.color = color
         self.pt0 = np.array(pt0)
         self.pt1 = np.array(pt1)
-        self.width = width
         self.total = 0
+        self.time_frac = 0
 
-        self.rect_outline = Line(rectangle=[*self.pt0, *(self.pt1 - self.pt0)])
+        self.rect_outline = Line(rectangle=[*self.pt0, *(self.pt1 - self.pt0)], width=2)
         self.rect_fill = Rectangle(pos=self.pt0, size=(0, 0))
+        self.rect_bg = Rectangle(pos=self.pt0, size=(self.pt1 - self.pt0))
+        self.text = CLabelRect(pos=(self.pt0 + self.pt1) / 2)
+
+        self.add(Color(0, 0, 0, 0.5))
+        self.add(self.rect_bg)
         self.add(self.color)
         self.add(self.rect_fill)
         self.add(self.rect_outline)
+        self.add(Color(1, 1, 1))
+        self.add(self.text)
 
     def set_total(self, total_len):
         self.total = total_len
 
     def on_update(self, time):
         time_frac = time / self.total
-        current_width = self.pt0[0] + time_frac * (self.pt1[0] - self.pt0[0])
-        self.rect_fill.size = (current_width, self.pt1[1] - self.pt0[1])
+        self.time_frac = time_frac
+
+        current_width = time_frac * (self.pt1[0] - self.pt0[0])
+        if current_width >= 0:
+            self.rect_fill.size = (current_width, self.pt1[1] - self.pt0[1])
+        else:
+            self.rect_fill.pos = (self.pt0[0] + current_width, self.pt0[1])
+            self.rect_fill.size = (-1 * current_width, self.pt1[1] - self.pt0[1])
+
+        self.text.set_text("%d / %d" % (time, self.total))
+
+    def set_size(self, pt0, pt1):
+        self.pt0 = np.array(pt0)
+        self.pt1 = np.array(pt1)
+        self.rect_outline.rectangle = [*self.pt0, *(self.pt1 - self.pt0)]
+        self.rect_bg.pos = np.minimum(self.pt0, self.pt1)
+        self.rect_bg.size = np.abs(self.pt1 - self.pt0)
+        self.rect_fill.pos = self.pt0
+        self.text.set_pos((self.pt0 + self.pt1) / 2)
+        self.on_update(self.time_frac * self.total)
 
 
 class MainWidget(BaseWidget):

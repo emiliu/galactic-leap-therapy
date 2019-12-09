@@ -79,7 +79,7 @@ class MainWidget(BaseWidget):
         # self.TOUCH = 10
 
         # self.audio.toggle()
-        #self.opp = self.player.score  # number of opp exc completed in time
+        # self.opp = self.player.score  # number of opp exc completed in time
 
         self.add_widget(self.explosions)
 
