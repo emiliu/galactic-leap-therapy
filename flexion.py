@@ -25,7 +25,7 @@ from audio import AudioController
 from gesture import GestureWidget
 from graphics import FlexShip, TileDisplay
 from sounds import NoteCluster, NoteSequencer
-from pset7 import SongData
+from opposition import SongData
 
 
 class MainWidget(BaseWidget):
