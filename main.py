@@ -65,7 +65,7 @@ class MenuScreen(Screen):
         self.dash_btn = Button(background_normal="images/buttons/dash.png",
                                background_down="images/buttons/dash_pressed.png",
                                size_hint=(0.414 / aspect, 0.1),
-                               pos_hint={"center_x": 0.5, "center_y": 0.9})
+                               pos_hint={"center_x": 0.5, "center_y": 0.93})
 
         self.opp_btn.bind(on_release=lambda btn: self.switch_screen("help", "opp"))
         self.flex_btn.bind(on_release=lambda btn: self.switch_screen("help", "flex"))
@@ -161,6 +161,7 @@ class GameScreen(Screen):
 
         self.switch_screen("menu")
         self.remove_widget(self.game_widget)
+        self.game_widget = None
 
 
 class MainApp(App):
@@ -185,9 +186,10 @@ class MainApp(App):
 
         elif switch_to == "menu":
             # gets the score from opp or flex
-            score = self.game_screen.game_widget.get_score()
-            print("new score", score)
-            self.menu_screen.update_score(self.game_screen.type, score)
+            if self.game_screen.game_widget:
+                score = self.game_screen.game_widget.get_score()
+                print("new score", score)
+                self.menu_screen.update_score(self.game_screen.type, score)
 
             self.sm.switch_to(self.menu_screen)
 
