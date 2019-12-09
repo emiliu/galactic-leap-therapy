@@ -54,18 +54,24 @@ class MenuScreen(Screen):
         self.canvas.add(self.flex_label)
 
         aspect = Window.width / Window.height
-        self.opp_btn = Button(background_normal="images/buttons/opposition.png",
-                              background_down="images/buttons/opposition_pressed.png",
-                              size_hint=(0.294 / aspect, 0.1),
-                              pos_hint={"center_x": 0.35, "center_y": 0.2})
-        self.flex_btn = Button(background_normal="images/buttons/flexion.png",
-                               background_down="images/buttons/flexion_pressed.png",
-                               size_hint=(0.24 / aspect, 0.1),
-                               pos_hint={"center_x": 0.65, "center_y": 0.2})
-        self.dash_btn = Button(background_normal="images/buttons/dash.png",
-                               background_down="images/buttons/dash_pressed.png",
-                               size_hint=(0.414 / aspect * 0.75, 0.1 * 0.75),
-                               pos_hint={"center_x": 0.5, "center_y": 0.93})
+        self.opp_btn = Button(
+            background_normal="images/buttons/opposition.png",
+            background_down="images/buttons/opposition_pressed.png",
+            size_hint=(0.294 / aspect, 0.1),
+            pos_hint={"center_x": 0.35, "center_y": 0.2}
+        )
+        self.flex_btn = Button(
+            background_normal="images/buttons/flexion.png",
+            background_down="images/buttons/flexion_pressed.png",
+            size_hint=(0.24 / aspect, 0.1),
+            pos_hint={"center_x": 0.65, "center_y": 0.2}
+        )
+        self.dash_btn = Button(
+            background_normal="images/buttons/dash.png",
+            background_down="images/buttons/dash_pressed.png",
+            size_hint=(0.414 / aspect * 0.75, 0.1 * 0.75),
+            pos_hint={"center_x": 0.5, "center_y": 0.93}
+        )
 
         self.opp_btn.bind(on_release=lambda btn: self.switch_screen("help", "opp"))
         self.flex_btn.bind(on_release=lambda btn: self.switch_screen("help", "flex"))
@@ -129,10 +135,12 @@ class GameScreen(Screen):
 
         aspect = Window.width / Window.height
 
-        self.exit_btn = Button(background_normal="images/buttons/exit.png",
-                               background_down="images/buttons/exit_pressed.png",
-                               size_hint=(0.169 / aspect * 0.75, 0.1 * 0.75),
-                               pos_hint={"x": 0.01, "y": 0.015})
+        self.exit_btn = Button(
+            background_normal="images/buttons/exit.png",
+            background_down="images/buttons/exit_pressed.png",
+            size_hint=(0.169 / aspect * 0.75, 0.1 * 0.75),
+            pos_hint={"x": 0.01, "y": 0.015}
+        )
         self.exit_btn.bind(on_release=self.exit_game)
         self.add_widget(self.exit_btn, index=0)
 
