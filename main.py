@@ -44,39 +44,24 @@ class MenuScreen(Screen):
         self.canvas.add(self.score)
 
         aspect = Window.width / Window.height
-        self.opp_btn = ToggleButton(text="", group="game_choice", state="down",
-                                    background_down="images/buttons/opposition.png",
-                                    background_normal="images/buttons/opposition_unselected.png",
-                                    size_hint=(0.294 / aspect, 0.1),
-                                    pos_hint={"center_x": 0.35, "center_y": 0.25})
-        self.flex_btn = ToggleButton(text="", group="game_choice",
-                                    background_down="images/buttons/flexion.png",
-                                    background_normal="images/buttons/flexion_unselected.png",
-                                    size_hint=(0.24 / aspect, 0.1),
-                                    pos_hint={"center_x": 0.65, "center_y": 0.25})
+        self.opp_btn = Button(text="",
+                              background_normal="images/buttons/opposition.png",
+                              background_down="images/buttons/opposition_pressed.png",
+                              size_hint=(0.294 / aspect, 0.1),
+                              pos_hint={"center_x": 0.35, "center_y": 0.2})
+        self.flex_btn = Button(text="",
+                               background_normal="images/buttons/flexion.png",
+                               background_down="images/buttons/flexion_pressed.png",
+                               size_hint=(0.24 / aspect, 0.1),
+                               pos_hint={"center_x": 0.65, "center_y": 0.2})
 
-        self.start_btn = Button(
-            text="",
-            size_hint=(0.207 / aspect, 0.1),
-            pos_hint={"center_x": 0.5, "center_y": 0.1},
-            background_normal="images/buttons/start.png",
-            background_down="images/buttons/start_pressed.png"
-        )
-        self.start_btn.bind(on_release=self.change_screen)
+        self.opp_btn.bind(on_release=lambda btn: self.switch_screen("game", "opp"))
+        self.flex_btn.bind(on_release=lambda btn: self.switch_screen("game", "flex"))
 
         self.add_widget(self.opp_btn)
         self.add_widget(self.flex_btn)
-        self.add_widget(self.start_btn)
 
         Clock.schedule_interval(self.scale_bg, 0)
-
-    def change_screen(self, btn):
-        if self.opp_btn.state == "down":
-            game_type = "opp"
-        else:
-            game_type = "flex"
-
-        self.switch_screen("game", game_type)
 
     def scale_bg(self, *args):
         # resize background
@@ -93,7 +78,6 @@ class MenuScreen(Screen):
             aspect = Window.width / Window.height
             self.opp_btn.size_hint = (0.294 / aspect, 0.1)
             self.flex_btn.size_hint = (0.24 / aspect, 0.1)
-            self.start_btn.size_hint = (0.207 / aspect, 0.1)
 
 
 class GameScreen(Screen):
