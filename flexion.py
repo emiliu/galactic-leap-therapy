@@ -137,6 +137,11 @@ class MainWidget(BaseWidget):
         # resize label
         resize_topleft_label(self.label)
 
+    def get_score(self):
+        # return the gem index
+        time = self.audio.get_time()
+        return self.display.get_gem_idx(time)
+
 
 """
 # holds data for gems and barlines.
@@ -285,7 +290,7 @@ class BeatMatchDisplay(InstructionGroup):
         self.progress = ProgressBar(
             (Window.width, 0), (Window.width, Window.height), Color(0.2, 0.93, 0.48)
         )
-        self.progress.set_total_time(max(song_solo_len, song_bg_len))
+        self.progress.set_total(max(song_solo_len, song_bg_len))
         self.add(self.progress)
 
     # call every frame to handle animation needs
@@ -364,6 +369,9 @@ class BeatMatchDisplay(InstructionGroup):
         size_scale = (out_y - c_y) / (self.NOW_BAR - c_y)
 
         return ((out_x, out_y), size_scale)
+
+    def get_gem_idx(self, time):
+        return round(time * self.TILES_PER_SECOND) % 10
 
 
 # Handles game logic and keeps score.

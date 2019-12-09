@@ -77,6 +77,13 @@ class CLabelRect(InstructionGroup):
         self.rect.size = self.label.texture_size
         self.rect.texture = self.label.texture
 
+    def set_pos(self, pos):
+        self.pos = pos
+        self.rect.pos = (
+            pos[0] - (self.label.texture_size[0] * 0.5),
+            pos[1] - (self.label.texture_size[1] * 0.5),
+        )
+
 
 # Override Ellipse class to add centered functionality.
 # use cpos and csize to set/get the ellipse based on a centered registration point
