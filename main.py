@@ -58,19 +58,19 @@ class MenuScreen(Screen):
             background_normal="images/buttons/opposition.png",
             background_down="images/buttons/opposition_pressed.png",
             size_hint=(0.294 / aspect, 0.1),
-            pos_hint={"center_x": 0.35, "center_y": 0.2}
+            pos_hint={"center_x": 0.3, "center_y": 0.15},
         )
         self.flex_btn = Button(
             background_normal="images/buttons/flexion.png",
             background_down="images/buttons/flexion_pressed.png",
             size_hint=(0.24 / aspect, 0.1),
-            pos_hint={"center_x": 0.65, "center_y": 0.2}
+            pos_hint={"center_x": 0.7, "center_y": 0.15},
         )
         self.dash_btn = Button(
             background_normal="images/buttons/dash.png",
             background_down="images/buttons/dash_pressed.png",
             size_hint=(0.414 / aspect * 0.75, 0.1 * 0.75),
-            pos_hint={"center_x": 0.5, "center_y": 0.93}
+            pos_hint={"center_x": 0.5, "center_y": 0.955},
         )
 
         self.opp_btn.bind(on_release=lambda btn: self.switch_screen("help", "opp"))
@@ -139,25 +139,25 @@ class GameScreen(Screen):
             background_normal="images/buttons/exit.png",
             background_down="images/buttons/exit_pressed.png",
             size_hint=(0.169 / aspect * 0.75, 0.1 * 0.75),
-            pos_hint={"x": 0.01, "y": 0.015}
+            pos_hint={"x": 0.01, "y": 0.015},
         )
         self.exit_btn.bind(on_release=self.exit_game)
-        #self.add_widget(self.exit_btn, index=0)
+        # self.add_widget(self.exit_btn, index=0)
 
         self.pause_btn = Button(
             background_normal="images/buttons/pause.png",
             background_down="images/buttons/pause_pressed.png",
             size_hint=(0.239 / aspect * 0.75, 0.1 * 0.75),
-            pos_hint={"right": 0.99, "y": 0.015}
+            pos_hint={"right": 0.99, "y": 0.015},
         )
         self.pause_btn.bind(on_release=self.pause_game)
-        #self.add_widget(self.pause_btn, index=0)
+        # self.add_widget(self.pause_btn, index=0)
 
         self.resume_btn = Button(
             background_normal="images/buttons/resume.png",
             background_down="images/buttons/resume_pressed.png",
             size_hint=(0.319 / aspect, 0.1),
-            pos_hint={"center_x": 0.5, "center_y": 0.5}
+            pos_hint={"center_x": 0.5, "center_y": 0.5},
         )
         self.resume_color = Color(0, 0, 0, 0.5)
         self.resume_rect = Rectangle(size=Window.size)
@@ -198,7 +198,7 @@ class GameScreen(Screen):
         # t()
 
         self.switch_screen("menu")
-        #self.remove_widget(self.game_widget)
+        # self.remove_widget(self.game_widget)
         self.clear_widgets()
         self.canvas.clear()
         self.game_widget = None
