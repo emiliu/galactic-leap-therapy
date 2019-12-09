@@ -39,6 +39,7 @@ class MainWidget(BaseWidget):
         )
         self.canvas.add(self.bg)
 
+
         # load song data
         # data_manager = SongData()
         # gem_data, bar_data = data_manager.read_data(
@@ -136,6 +137,11 @@ class MainWidget(BaseWidget):
 
         # resize label
         resize_topleft_label(self.label)
+
+    def get_score(self):
+    	#return the gem index 
+    	time = self.audio.get_time()
+    	return self.display.get_gem_idx(time)
 
 
 """
@@ -364,6 +370,9 @@ class BeatMatchDisplay(InstructionGroup):
         size_scale = (out_y - c_y) / (self.NOW_BAR - c_y)
 
         return ((out_x, out_y), size_scale)
+
+    def get_gem_idx(self, time):
+    	return round(time * self.TILES_PER_SECOND) % 10
 
 
 # Handles game logic and keeps score.
