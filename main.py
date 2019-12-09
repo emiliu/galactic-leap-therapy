@@ -1,15 +1,9 @@
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.graphics import Color, Rectangle
-from kivy.uix.boxlayout import BoxLayout
+from kivy.graphics import Rectangle
 from kivy.uix.button import Button
-from kivy.uix.dropdown import DropDown
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
-from kivy.uix.togglebutton import ToggleButton
-from common.gfxutil import CLabelRect, topleft_label
-from kivy.uix.label import Label
-
 
 import sys
 import numpy as np
@@ -18,6 +12,7 @@ from flexion import MainWidget as FlexWidget
 from opposition import MainWidget as OppWidget
 
 # from common.core import g_terminate_funcs
+from common.gfxutil import CLabelRect
 
 
 class MenuScreen(Screen):
