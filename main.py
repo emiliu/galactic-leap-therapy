@@ -11,6 +11,8 @@ import numpy as np
 from flexion import MainWidget as FlexWidget
 from opposition import MainWidget as OppWidget
 
+from info import HelpScreen, InfoScreen
+
 # from common.core import g_terminate_funcs
 from common.gfxutil import CLabelRect
 
@@ -50,8 +52,8 @@ class MenuScreen(Screen):
                                size_hint=(0.24 / aspect, 0.1),
                                pos_hint={"center_x": 0.65, "center_y": 0.2})
 
-        self.opp_btn.bind(on_release=lambda btn: self.switch_screen("game", "opp"))
-        self.flex_btn.bind(on_release=lambda btn: self.switch_screen("game", "flex"))
+        self.opp_btn.bind(on_release=lambda btn: self.switch_screen("help", "opp"))
+        self.flex_btn.bind(on_release=lambda btn: self.switch_screen("help", "flex"))
 
         self.add_widget(self.opp_btn)
         self.add_widget(self.flex_btn)
@@ -132,6 +134,8 @@ class MainApp(App):
         self.sm = ScreenManager(transition=FadeTransition())
         self.menu_screen = MenuScreen(self.switch_screen)
         self.game_screen = GameScreen(self.switch_screen)
+        self.help_screen = HelpScreen(self.switch_screen)
+        self.info_screen = InfoScreen(self.switch_screen)
 
     def build(self):
         self.sm.add_widget(self.menu_screen)
@@ -143,8 +147,15 @@ class MainApp(App):
             self.game_screen.init_game(game_type)
             self.sm.switch_to(self.game_screen)
 
-        if switch_to == "menu":
+        elif switch_to == "menu":
             self.sm.switch_to(self.menu_screen)
+
+        elif switch_to == "help":
+            self.help_screen.set_game(game_type)
+            self.sm.switch_to(self.help_screen)
+
+        elif switch_to == "info":
+            self.sm.switch_to(self.info_screen)
 
 
 if __name__ == "__main__":
