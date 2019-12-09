@@ -181,20 +181,26 @@ class ExplosionsWidget(Widget):
     def __init__(self, *args, **kwargs):
         super(ExplosionsWidget, self).__init__()
         self.explosions = []
+        self.explosions_copy = []
 
     def add_explosion(self, pos, duration):
         # Explosion(pos, duration)
-        ps = ParticleSystem("images/particle_flame/particle.pex")
+        ps = ParticleSystem("images/particle_explosion/particle.pex")
         ps.emitter_x = pos[0]
         ps.emitter_y = pos[1]
         ps.start()
         self.add_widget(ps)
         self.explosions.append(ps)
+        self.explosions_copy.append(ps)
         Clock.schedule_once(self.stop_explosion, duration)
 
     def stop_explosion(self, *args):
         ps = self.explosions.pop(0)
         ps.stop()
+        Clock.schedule_once(self.remove_explosion, 1)
+
+    def remove_explosion(self, *args):
+        ps = self.explosions_copy.pop(0)
         self.remove_widget(ps)
 
 
