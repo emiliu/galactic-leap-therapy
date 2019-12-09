@@ -17,14 +17,18 @@ class HelpScreen(Screen):
         self.canvas.add(self.bg)
 
         aspect = Window.width / Window.height
-        self.play_btn = Button(background_normal="images/buttons/play.png",
-                               background_down="images/buttons/play_pressed.png",
-                               size_hint=(0.184 / aspect, 0.1),
-                               pos_hint={"center_x": 0.5, "center_y": 0.15})
-        self.back_btn = Button(background_normal="images/buttons/back.png",
-                               background_down="images/buttons/back_pressed.png",
-                               size_hint=(0.208 / aspect, 0.1),
-                               pos_hint={"x": 0.05, "y": 0.05})
+        self.play_btn = Button(
+            background_normal="images/buttons/play.png",
+            background_down="images/buttons/play_pressed.png",
+            size_hint=(0.184 / aspect, 0.1),
+            pos_hint={"center_x": 0.5, "center_y": 0.15}
+        )
+        self.back_btn = Button(
+            background_normal="images/buttons/back.png",
+            background_down="images/buttons/back_pressed.png",
+            size_hint=(0.208 / aspect, 0.1),
+            pos_hint={"x": 0.05, "y": 0.05}
+        )
         self.back_btn.bind(on_release=lambda btn: self.switch_screen("menu"))
         self.add_widget(self.back_btn)
 
@@ -109,14 +113,18 @@ class DashScreen(Screen):
         self.canvas.add(self.bg)
 
         aspect = Window.width / Window.height
-        self.back_btn = Button(background_normal="images/buttons/back.png",
-                               background_down="images/buttons/back_pressed.png",
-                               size_hint=(0.208 / aspect * 0.75, 0.1 * 0.75),
-                               pos_hint={"x": 0.03, "y": 0.05})
-        self.about_btn = Button(background_normal="images/buttons/about.png",
-                                background_down="images/buttons/about_pressed.png",
-                                size_hint=(0.255 / aspect * 0.75, 0.1 * 0.75),
-                                pos_hint={"right": 0.97, "y": 0.05})
+        self.back_btn = Button(
+            background_normal="images/buttons/back.png",
+            background_down="images/buttons/back_pressed.png",
+            size_hint=(0.208 / aspect * 0.75, 0.1 * 0.75),
+            pos_hint={"x": 0.03, "y": 0.05}
+        )
+        self.about_btn = Button(
+            background_normal="images/buttons/about.png",
+            background_down="images/buttons/about_pressed.png",
+            size_hint=(0.255 / aspect * 0.75, 0.1 * 0.75),
+            pos_hint={"right": 0.97, "y": 0.05}
+        )
         self.back_btn.bind(on_release=lambda btn: self.switch_screen("menu"))
         self.about_btn.bind(on_release=lambda btn: self.switch_screen("help"))
         self.add_widget(self.back_btn)
