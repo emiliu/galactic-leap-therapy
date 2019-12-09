@@ -142,7 +142,28 @@ class GameScreen(Screen):
             pos_hint={"x": 0.01, "y": 0.015}
         )
         self.exit_btn.bind(on_release=self.exit_game)
-        self.add_widget(self.exit_btn, index=0)
+        #self.add_widget(self.exit_btn, index=0)
+
+        self.pause_btn = Button(
+            background_normal="images/buttons/pause.png",
+            background_down="images/buttons/pause_pressed.png",
+            size_hint=(0.239 / aspect * 0.75, 0.1 * 0.75),
+            pos_hint={"right": 0.99, "y": 0.015}
+        )
+        self.pause_btn.bind(on_release=self.pause_game)
+        #self.add_widget(self.pause_btn, index=0)
+
+        self.resume_btn = Button(
+            background_normal="images/buttons/resume.png",
+            background_down="images/buttons/resume_pressed.png",
+            size_hint=(0.319 / aspect, 0.1),
+            pos_hint={"center_x": 0.5, "center_y": 0.5}
+        )
+        self.resume_color = Color(0, 0, 0, 0.5)
+        self.resume_rect = Rectangle(size=Window.size)
+        self.resume_btn.bind(on_release=self.resume_game)
+
+        self.paused = False
 
     def init_game(self, game):
         if game == "opp":
@@ -156,6 +177,15 @@ class GameScreen(Screen):
         self.add_widget(self.game_widget, index=2)
         self.type = game
 
+        self.pause_btn.size_hint = (0.239 / aspect * 0.75, 0.1 * 0.75)
+        self.resume_btn.size_hint = (0.319 / aspect, 0.1)
+        self.resume_rect.size = Window.size
+
+        self.add_widget(self.exit_btn)
+        self.add_widget(self.pause_btn)
+
+        self.paused = False
+
     def exit_game(self, btn):
         # not the recommended way of unscheduling
         # but we don't have a reference to the scheduled object
@@ -168,8 +198,26 @@ class GameScreen(Screen):
         # t()
 
         self.switch_screen("menu")
-        self.remove_widget(self.game_widget)
+        #self.remove_widget(self.game_widget)
+        self.clear_widgets()
+        self.canvas.clear()
         self.game_widget = None
+
+    def pause_game(self, btn):
+        if self.game_widget and not self.paused:
+            self.canvas.add(self.resume_color)
+            self.canvas.add(self.resume_rect)
+            self.add_widget(self.resume_btn)
+            self.game_widget.audio.toggle()
+            self.paused = True
+
+    def resume_game(self, btn):
+        if self.game_widget and self.paused:
+            self.canvas.remove(self.resume_color)
+            self.canvas.remove(self.resume_rect)
+            self.remove_widget(self.resume_btn)
+            self.game_widget.audio.toggle()
+            self.paused = False
 
 
 class MainApp(App):
