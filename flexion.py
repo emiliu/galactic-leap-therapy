@@ -1,23 +1,8 @@
-from common.core import BaseWidget, run, lookup
-from common.gfxutil import (
-    topleft_label,
-    resize_topleft_label,
-    Cursor3D,
-    AnimGroup,
-    KFAnim,
-    scale_point,
-    CEllipse,
-    CRectangle,
-    CLabelRect,
-)
+from common.core import BaseWidget, run
 from common.kivyparticle import ParticleSystem
 
 from kivy.core.window import Window
-from kivy.core.image import Image
-from kivy.uix.label import Label
-from kivy.uix.widget import Widget
-from kivy.graphics import Color, Ellipse, Line, Rectangle
-from kivy.graphics import PushMatrix, PopMatrix, Translate
+from kivy.graphics import Color, Line, Rectangle
 from kivy.graphics.instructions import InstructionGroup
 
 import numpy as np
@@ -444,4 +429,3 @@ class Player(object):
 
 if __name__ == "__main__":
     run(MainWidget)
-    # run(MainWidget, fullscreen=True)

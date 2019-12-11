@@ -1,16 +1,13 @@
 import numpy as np
 
-from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.core.image import Image
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Ellipse, Line, Rectangle, Triangle
 from kivy.graphics.instructions import InstructionGroup
 
-from common.audio import Audio
 from common.gfxutil import CRectangle, CEllipse, CLabelRect
-from common.core import BaseWidget, run, lookup
+from common.core import BaseWidget, run
 from common.kivyparticle import ParticleSystem
 
 

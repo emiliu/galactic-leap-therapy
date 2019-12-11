@@ -1,20 +1,14 @@
-# pset7.py
-
 import sys
 import numpy as np
 
-# sys.path.append('..')
-
 from common.core import BaseWidget, run, lookup
-from common.gfxutil import CEllipse, CRectangle, topleft_label, resize_topleft_label
 from common.kivyparticle import ParticleSystem
 
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.core.image import Image
 from kivy.graphics.instructions import InstructionGroup
-from kivy.graphics import Color, Ellipse, Line, Rectangle
-from kivy.graphics import PushMatrix, PopMatrix, Translate
+from kivy.graphics import Color, Line, Rectangle
 from kivy.uix.widget import Widget
 
 from audio import AudioController
