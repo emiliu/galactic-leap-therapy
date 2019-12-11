@@ -8,11 +8,13 @@ from common.gfxutil import (
     scale_point,
     CEllipse,
     CRectangle,
+    CLabelRect,
 )
 from common.kivyparticle import ParticleSystem
 
 from kivy.core.window import Window
 from kivy.core.image import Image
+from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.graphics import PushMatrix, PopMatrix, Translate
@@ -23,7 +25,7 @@ import scipy.interpolate
 
 from audio import AudioController
 from gesture import GestureWidget
-from graphics import FlexShip, TileDisplay, ProgressBar
+from graphics import FlexShip, TileDisplay, TopLeftLabel, ProgressBar
 from sounds import NoteCluster, NoteSequencer
 from opposition import SongData
 
@@ -78,7 +80,7 @@ class MainWidget(BaseWidget):
         )
         self.canvas.add(self.gesture)
 
-        self.label = topleft_label()
+        self.label = TopLeftLabel(5, 1.5)
         self.add_widget(self.label)
 
     def on_key_down(self, keycode, modifiers):
@@ -108,9 +110,7 @@ class MainWidget(BaseWidget):
         # delta = wrist_angle * 10
         # self.player.move_position(delta)
 
-        self.label.text = ""
-        # self.label.text += "\nScore: %.2f\n" % self.player.score
-        self.label.text += "Time: %.2f\n" % time
+        self.label.set_text("Time: %.2f\n" % time)
 
     def on_layout(self, window_size):
         # resize background
@@ -135,7 +135,7 @@ class MainWidget(BaseWidget):
         self.gesture.resize_display(kCursorAreaPos, kCursorAreaSize)
 
         # resize label
-        resize_topleft_label(self.label)
+        self.label.resize()
 
     def get_score(self):
         # return the gem index

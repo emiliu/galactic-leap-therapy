@@ -3,6 +3,7 @@ import numpy as np
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.core.image import Image
+from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Ellipse, Line, Rectangle, Triangle
 from kivy.graphics.instructions import InstructionGroup
@@ -357,6 +358,56 @@ class ProgressRect(InstructionGroup):
         self.rect_fill.pos = self.pt0
         self.text.set_pos((self.pt0 + self.pt1) / 2)
         self.on_update(self.time_frac * self.total)
+
+
+class TopLeftLabel(Widget):
+    def __init__(self, width, height, color=Color(0.461, 0.207, 0.576, 0.8)):
+        super(TopLeftLabel, self).__init__()
+        self.size_hint = (1, 1)
+
+        self.color = color
+        self.width = width
+        self.height = height
+
+        font_size = Window.width * 0.05
+        label_width = font_size * width
+        label_height = font_size * height
+        print(label_width, label_height)
+
+        label_pos = (Window.width * 0.01, Window.height * 0.99 - label_height)
+        #label_pos = (0, 0)
+        self.rect = Rectangle(pos=label_pos, size=(label_width, label_height))
+        #print(label_pos)
+
+        self.label = Label(
+            text="",
+            valign="top",
+            font_size=font_size,
+            pos=(font_size * 0.5, - font_size * 0.4),
+            text_size=Window.size,
+            size=Window.size
+        )
+
+        self.canvas.add(self.color)
+        self.canvas.add(self.rect)
+        self.add_widget(self.label)
+
+    def set_text(self, text=None):
+        self.label.text = text
+
+    def resize(self):
+        font_size = Window.width * 0.03
+        label_width = font_size * self.width
+        label_height = font_size * self.height
+        label_pos = (Window.width * 0.01, Window.height * 0.99 - label_height)
+
+        self.rect.pos = label_pos
+        self.rect.size = (label_width, label_height)
+
+        self.label.font_size = font_size
+        self.label.pos = (font_size * 0.5, - font_size * 0.4)
+        self.label.text_size = Window.size
+        self.label.size = Window.size
 
 
 class MainWidget(BaseWidget):

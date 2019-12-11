@@ -19,7 +19,7 @@ from kivy.uix.widget import Widget
 
 from audio import AudioController
 from gesture import GestureWidget
-from graphics import ButtonDisplay, GemDisplay, ProgressBar
+from graphics import ButtonDisplay, GemDisplay, ProgressBar, TopLeftLabel
 
 
 # slop window in seconds
@@ -54,7 +54,7 @@ class MainWidget(BaseWidget):
         self.player = Player(self.data, self.display, self.audio, self.explosions)
         self.canvas.add(self.display)
 
-        self.score = topleft_label()
+        self.score = TopLeftLabel(7, 4)
         self.add_widget(self.score)
 
         # add gesture widget
@@ -109,14 +109,16 @@ class MainWidget(BaseWidget):
         self.display.on_update(time)
         self.player.on_update(time)
 
-        self.score.text = "Score: %d\n" % self.player.score
-        self.score.text += "Streak: %d\n" % self.player.streak
+        score_text =  "Score: %d\n" % self.player.score
+        score_text += "Streak: %d\n" % self.player.streak
 
         # get current gesture status
         self.gesture.on_update()
         touches = self.gesture.get_touch_states()
         hand = self.gesture.get_hand()
-        self.score.text += "Hand: " + str(hand)
+        score_text += "Hand: " + str(hand)
+
+        self.score.set_text(score_text)
 
         # update game logic depending on which hand is in use
         for finger in range(4):
@@ -174,7 +176,8 @@ class MainWidget(BaseWidget):
         self.gesture.resize_display(kCursorAreaPos, kCursorAreaSize)
 
         # resize label
-        resize_topleft_label(self.score)
+        #resize_topleft_label(self.score)
+        self.score.resize()
 
 
 class ExplosionsWidget(Widget):
