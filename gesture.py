@@ -38,6 +38,8 @@ class GestureWidget(InstructionGroup):
         cursor_area_size=None,
         size_range=None,
         display_trailing_cursors=True,
+        show_fingers=False,
+        border=False,
     ):
         super(GestureWidget, self).__init__()
 
@@ -64,6 +66,7 @@ class GestureWidget(InstructionGroup):
                     cursor_area_pos,
                     (0.2, 0.6, 0.2),
                     size_range=size_range,
+                    border=border,
                 )
             )
 
@@ -77,12 +80,13 @@ class GestureWidget(InstructionGroup):
                         cursor_area_pos,
                         (0.1, 0.3, 0.1),
                         size_range=size_range,
+                        border=border,
                     )
                 )
 
         # cursor for palm
         self.palm_cursor = Cursor3D(
-            cursor_area_size, cursor_area_pos, (1, 1, 1), size_range=size_range
+            cursor_area_size, cursor_area_pos, (1, 1, 1), size_range=size_range, border=border
         )
         self.palm_cursor_1 = None
         if display_trailing_cursors:
@@ -91,6 +95,7 @@ class GestureWidget(InstructionGroup):
                 cursor_area_pos,
                 (0.5, 0.5, 0.5),
                 size_range=size_range,
+                border=border,
             )
 
         # lines between palm and fingertips
@@ -99,9 +104,10 @@ class GestureWidget(InstructionGroup):
             self.finger_lines.append(Line(points=[0, 0, 0, 0], width=2))
 
         # add to canvas
-        self.add(Color(1, 1, 1))
-        for fl in self.finger_lines:
-            self.add(fl)
+        if show_fingers:
+            self.add(Color(1, 1, 1))
+            for fl in self.finger_lines:
+                self.add(fl)
 
         if display_trailing_cursors:
             self.add(self.palm_cursor_1)
