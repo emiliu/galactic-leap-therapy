@@ -212,39 +212,30 @@ class GemDisplay(InstructionGroup):
 
 # Displays one button on the nowbar
 class ButtonDisplay(InstructionGroup):
-    def __init__(self, pos, color, texture):
+    def __init__(self, pos, color, texture, pressed_texture=None):
         super(ButtonDisplay, self).__init__()
 
-        SIZE = Window.width / 18
+        SIZE = Window.width / 16
 
-        self.color = color
-        # self.add(self.color)
-        # self.add(CEllipse(cpos=pos, csize=(SIZE, SIZE)))
+        # self.color = color
+
+        self.texture = texture
+        self.pressed_texture = texture
+        if self.pressed_texture:
+            self.pressed_texture = pressed_texture
 
         self.texture_color = Color(1, 1, 1, 1)
         self.add(self.texture_color)
-        self.add(CEllipse(cpos=pos, csize=(SIZE, SIZE), texture=texture))
-
-        # self.add(Color(1, 1, 1, 1))
-        # self.size = (40, 40)
-        # self.pos = pos
-        # self.shape = CRectangle(
-        #    csize=self.size, cpos=pos, segments=4, source="images/rocketship.png"
-        # )
-        # self.add(self.shape)
+        self.btn = CEllipse(cpos=pos, csize=(SIZE, SIZE), texture=texture)
+        self.add(self.btn)
 
     # displays when button is down (and if it hit a gem)
     def on_down(self, hit):
-        pass
-        # if hit:
-        # self.texture_color.a = 1
-        # else:
-        # self.color.a = 0.8
+        self.btn.texture = self.pressed_texture
 
     # back to normal state
     def on_up(self):
-        self.color.a = 1
-        self.texture_color.a = 0
+        self.btn.texture = self.texture
 
 
 class TileDisplay(InstructionGroup):

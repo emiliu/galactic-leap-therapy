@@ -131,8 +131,8 @@ class MainWidget(BaseWidget):
 
             if touch:
                 self.player.on_button_down(finger)
-            # elif not touches[finger]:
-            # elf.player.on_button_up(finger)
+            elif hand == "left" and not touches[4 - finger] or hand == "right" and not touches[finger + 1]:
+                self.player.on_button_up(finger)
 
         """
         self.gesture.check_touch()
@@ -176,7 +176,6 @@ class MainWidget(BaseWidget):
         self.gesture.resize_display(kCursorAreaPos, kCursorAreaSize)
 
         # resize label
-        #resize_topleft_label(self.score)
         self.score.resize()
 
 
@@ -271,20 +270,21 @@ class BeatMatchDisplay(InstructionGroup):
             self.add(line)
 
         # now bar
-        self.add(Color(0.5, 0.5, 0.5))
-        self.add(
-            Line(points=[0, self.NOW_BAR, WIDTH, self.NOW_BAR], width=self.NOWBAR_WIDTH)
-        )
+        # self.add(Color(0.5, 0.5, 0.5))
+        # self.add(
+            # Line(points=[0, self.NOW_BAR, WIDTH, self.NOW_BAR], width=self.NOWBAR_WIDTH)
+        # )
 
         # buttons
         self.buttons = []
-        # btn_texture = None
-        btn_texture = Image("images/yellowship.png").texture
+        btn_texture = Image("images/purpleship.png").texture
+        btn_pressed_texture = Image("images/yellowship.png").texture
         for i in range(4):
             button = ButtonDisplay(
                 (i * self.diff + self.offset, self.NOW_BAR),
                 Color(*self.colors[i]),
                 texture=btn_texture,
+                pressed_texture=btn_pressed_texture,
             )
             self.buttons.append(button)
             self.add(button)
