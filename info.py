@@ -51,18 +51,21 @@ Enter your goals and track your progress
 using the dashboard!
 """,
             "opp": """
+Your palm should be facing down toward the sensor,
+about a foot above it for best detection.
+
 Each finger corresponds to a rocket ship.
-
-Your palm should be facing down toward the sensor.
-
 Touch your thumb to the correct finger when
 an asteroid reaches the rocket!
+Re-open your hand after so the sensor can reset.
 
 This exercise helps you practice finger opposition.
 """,
             "flex": """
 Make your hand flat and turn your hand left and
 right to control the spaceship and keep it on the path.
+
+Keep your hand about a foot above the sensor.
 
 This exercise helps you practice wrist flexion.
 """,
